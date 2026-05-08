@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PATH FINDER — Film & Media Course Finder</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080808;--bg2:#0f0f0f;--bg3:#161616;--bg4:#1e1e1e;
+  --cyan:#00e5ff;--magenta:#ff2d78;--amber:#ffb300;--green:#39ff14;--violet:#b44bff;
+  --white:#f0f0ef;--grey:#5a5a5a;--grey2:#2e2e2e;--grey3:#3d3d3d;
+  --text:#c8c8c4;--text2:#7a7a76;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --cyan-dim:rgba(0,229,255,0.10);--mag-dim:rgba(255,45,120,0.10);
+  --radius:3px;
+  --font-d:'Bebas Neue',sans-serif;
+  --font-b:'Syne',sans-serif;
+  --font-m:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:.35;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:998;}
+.hdr{position:relative;overflow:hidden;border-bottom:1px solid var(--border);}
+.hdr-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 15% 50%,rgba(0,229,255,0.05) 0%,transparent 60%),radial-gradient(ellipse 50% 80% at 85% 20%,rgba(255,45,120,0.06) 0%,transparent 60%);}
+.filmstrip{display:flex;height:6px;overflow:hidden;}
+.fs{flex:1;background:var(--bg3);border-right:1px solid var(--bg);}
+.hdr-inner{position:relative;z-index:2;padding:18px 18px 0;}
+.hdr-badges{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.badge{font-family:var(--font-m);font-size:9px;letter-spacing:.12em;padding:3px 8px;border-radius:2px;text-transform:uppercase;}
+.bc{background:var(--cyan-dim);color:var(--cyan);border:1px solid rgba(0,229,255,0.2);}
+.bm{background:var(--mag-dim);color:var(--magenta);border:1px solid rgba(255,45,120,0.2);}
+.hdr h1{font-family:var(--font-d);font-size:clamp(44px,11vw,82px);letter-spacing:.02em;line-height:.9;color:var(--white);margin-bottom:4px;}
+.hdr h1 .cc{color:var(--cyan);}
+.hdr h1 .cm{-webkit-text-stroke:1px var(--magenta);color:transparent;}
+.hdr-sub{font-size:11px;color:var(--text2);font-family:var(--font-m);margin-bottom:14px;letter-spacing:.04em;}
+.hdr-sub span{color:var(--cyan);}
+.nav{display:flex;border-top:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+.nav::-webkit-scrollbar{display:none;}
+.nt{font-family:var(--font-m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:10px 14px;cursor:pointer;color:var(--text2);border-right:1px solid var(--border);white-space:nowrap;transition:all .15s;background:transparent;border-bottom:2px solid transparent;flex-shrink:0;}
+.nt:hover{color:var(--white);background:var(--bg3);}
+.nt.on{color:var(--cyan);border-bottom-color:var(--cyan);background:var(--bg3);}
+.app{display:flex;flex-direction:column;}
+.panel{display:none;}
+.panel.on{display:block;}
+.fl{display:grid;grid-template-columns:1fr;}
+@media(min-width:768px){.fl{grid-template-columns:360px 1fr;min-height:calc(100vh - 160px);}}
+.fcol{padding:18px;border-right:1px solid var(--border);}
+@media(min-width:768px){.fcol{overflow-y:auto;max-height:calc(100vh - 160px);position:sticky;top:0;}}
+.rcol{padding:18px;}
+.fg{margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border);}
+.fg:last-of-type{border-bottom:none;}
+.fl2{font-family:var(--font-m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+.fl2::before{content:'';width:5px;height:5px;background:var(--cyan);border-radius:50%;flex-shrink:0;}
+.fhint{font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.5;}
+textarea,input[type="text"],select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:9px 11px;font-family:var(--font-b);font-size:13px;color:var(--white);outline:none;transition:border-color .15s,box-shadow .15s;appearance:none;-webkit-appearance:none;}
+textarea{resize:vertical;min-height:72px;line-height:1.5;}
+input:focus,textarea:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(0,229,255,0.07);}
+::placeholder{color:var(--grey);}
+select option{background:var(--bg3);color:var(--white);}
+.pg{display:flex;flex-wrap:wrap;gap:5px;}
+.pill{font-family:var(--font-m);font-size:10px;letter-spacing:.05em;padding:5px 9px;border:1px solid var(--border2);border-radius:2px;cursor:pointer;background:var(--bg3);color:var(--text2);transition:all .15s;user-select:none;white-space:nowrap;}
+.pill:hover{border-color:var(--grey3);color:var(--white);}
+.pill.on{background:var(--cyan);border-color:var(--cyan);color:var(--bg);font-weight:600;}
+.budget-row{display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap;}
+.cbtn{font-family:var(--font-m);font-size:10px;padding:4px 9px;border:1px solid var(--border2);border-radius:2px;cursor:pointer;background:var(--bg3);color:var(--text2);transition:all .15s;}
+.cbtn.on{border-color:var(--amber);color:var(--amber);background:var(--bg4);}
+.bdisp{font-family:var(--font-d);font-size:28px;color:var(--cyan);letter-spacing:.02em;margin:6px 0 2px;line-height:1;}
+.bsub{font-size:10px;color:var(--text2);font-family:var(--font-m);}
+.cost-toggle{display:flex;margin-bottom:8px;border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;}
+.ctbtn{flex:1;font-family:var(--font-m);font-size:10px;letter-spacing:.06em;padding:6px;background:transparent;border:none;cursor:pointer;color:var(--text2);transition:all .15s;}
+.ctbtn.on{background:var(--bg4);color:var(--cyan);}
+input[type="range"]{width:100%;height:3px;background:var(--bg4);border-radius:2px;outline:none;border:none;padding:0;margin:10px 0 0;cursor:pointer;-webkit-appearance:none;}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--cyan);box-shadow:0 0 7px rgba(0,229,255,0.5);cursor:pointer;}
+input[type="range"]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--cyan);border:none;cursor:pointer;}
+.egrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.egrid label{font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);display:block;margin-bottom:3px;}
+.sbtn{width:100%;background:linear-gradient(135deg,var(--cyan) 0%,#0099bb 100%);color:var(--bg);border:none;border-radius:var(--radius);padding:13px;font-family:var(--font-d);font-size:20px;letter-spacing:.06em;cursor:pointer;margin-top:10px;transition:all .15s;}
+.sbtn:hover{filter:brightness(1.1);}
+.sbtn:active{transform:scale(.99);}
+.sbtn:disabled{background:var(--grey2);color:var(--grey);cursor:not-allowed;}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:14px;text-align:center;}
+.fl-loader{display:flex;gap:3px;}
+.flf{width:9px;height:13px;background:var(--bg4);border:1px solid var(--border2);animation:fr .6s ease-in-out infinite;}
+.flf:nth-child(2){animation-delay:.1s;}.flf:nth-child(3){animation-delay:.2s;}.flf:nth-child(4){animation-delay:.3s;}.flf:nth-child(5){animation-delay:.4s;}
+@keyframes fr{0%,100%{background:var(--bg4);}50%{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}}
+.ltxt{font-family:var(--font-m);font-size:11px;color:var(--text2);letter-spacing:.07em;}
+.epty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:10px;}
+.epty-icon{font-size:38px;opacity:.25;}
+.epty-title{font-family:var(--font-d);font-size:22px;color:var(--text2);}
+.epty-sub{font-size:12px;color:var(--grey);max-width:280px;line-height:1.6;}
+.errbox{background:rgba(255,45,120,0.08);border:1px solid rgba(255,45,120,0.25);border-radius:var(--radius);padding:14px 16px;font-size:12px;color:var(--magenta);line-height:1.6;}
+/* RANKING EXPLAINER */
+.rank-explain{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;}
+.re-title{font-family:var(--font-m);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text2);margin-bottom:8px;}
+.re-factors{display:flex;flex-wrap:wrap;gap:5px;}
+.re-f{font-family:var(--font-m);font-size:9px;padding:3px 8px;border-radius:2px;border:1px solid var(--border2);color:var(--text2);}
+.re-f.hi{border-color:rgba(0,229,255,0.3);color:var(--cyan);}
+/* NEXT STEPS BANNER */
+.next-steps{background:linear-gradient(135deg,rgba(0,229,255,0.06),rgba(255,45,120,0.04));border:1px solid rgba(0,229,255,0.15);border-radius:var(--radius);padding:14px 16px;margin-top:16px;}
+.ns-title{font-family:var(--font-d);font-size:18px;color:var(--white);letter-spacing:.04em;margin-bottom:10px;}
+.ns-steps{display:flex;flex-direction:column;gap:7px;}
+.ns-step{display:flex;gap:10px;align-items:flex-start;}
+.ns-num{font-family:var(--font-d);font-size:18px;color:var(--cyan);line-height:1;flex-shrink:0;min-width:22px;}
+.ns-text{font-size:12px;color:var(--text);line-height:1.5;}
+.ns-text strong{color:var(--white);font-weight:500;}
+/* RESULTS */
+.rhdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-top:1px solid var(--border);padding-top:14px;flex-wrap:wrap;gap:8px;}
+.rtitle{font-family:var(--font-d);font-size:26px;color:var(--white);letter-spacing:.04em;}
+.rmeta{font-family:var(--font-m);font-size:10px;color:var(--text2);}
+.cg{display:flex;flex-direction:column;gap:10px;}
+.rcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:ci .4s ease both;transition:border-color .2s;}
+.rcard:hover{border-color:var(--border2);}
+@keyframes ci{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.crankbar{height:3px;background:var(--border);}
+.r1 .crankbar{background:linear-gradient(90deg,var(--cyan),#0099bb);box-shadow:0 0 8px rgba(0,229,255,0.35);}
+.r2 .crankbar{background:linear-gradient(90deg,var(--magenta),#cc1155);}
+.r3 .crankbar{background:linear-gradient(90deg,var(--amber),#cc8800);}
+.cbody{padding:14px;}
+.ctop{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;}
+.cnum{font-family:var(--font-d);font-size:32px;line-height:1;color:var(--bg4);flex-shrink:0;min-width:38px;}
+.r1 .cnum{color:var(--cyan);text-shadow:0 0 10px rgba(0,229,255,0.4);}
+.r2 .cnum{color:var(--magenta);}
+.r3 .cnum{color:var(--amber);}
+.cinfo{flex:1;min-width:0;}
+.cname{font-size:15px;font-weight:700;color:var(--white);line-height:1.2;margin-bottom:2px;}
+.cprog{font-size:12px;color:var(--cyan);font-weight:500;margin-bottom:3px;line-height:1.3;}
+.cloc{font-family:var(--font-m);font-size:9px;color:var(--text2);letter-spacing:.04em;}
+.ctype{font-family:var(--font-m);font-size:8px;letter-spacing:.1em;text-transform:uppercase;padding:3px 6px;border-radius:2px;flex-shrink:0;margin-top:2px;}
+.t-uni{background:rgba(0,229,255,0.08);color:var(--cyan);border:1px solid rgba(0,229,255,0.18);}
+.t-film{background:rgba(255,45,120,0.08);color:var(--magenta);border:1px solid rgba(255,45,120,0.18);}
+.t-short{background:rgba(255,179,0,0.08);color:var(--amber);border:1px solid rgba(255,179,0,0.18);}
+.t-online{background:rgba(57,255,20,0.06);color:var(--green);border:1px solid rgba(57,255,20,0.18);}
+.t-col{background:rgba(180,75,255,0.08);color:var(--violet);border:1px solid rgba(180,75,255,0.18);}
+.t-other{background:rgba(255,255,255,0.05);color:var(--text);border:1px solid var(--border2);}
+.ctags{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;}
+.tag{font-family:var(--font-m);font-size:9px;letter-spacing:.04em;padding:2px 6px;border-radius:2px;border:1px solid var(--border2);color:var(--text2);background:var(--bg3);}
+.tag-pub{border-color:rgba(0,229,255,0.2);color:var(--cyan);}
+.tag-pvt{border-color:rgba(180,75,255,0.2);color:var(--violet);}
+.tag-lang{border-color:rgba(255,179,0,0.2);color:var(--amber);}
+.meters{margin:10px 0;}
+.meter-row{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.mlbl{font-family:var(--font-m);font-size:9px;color:var(--text2);letter-spacing:.05em;min-width:132px;flex-shrink:0;}
+.mbar{flex:1;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;}
+.mfill{height:100%;border-radius:2px;transition:width 1.2s ease;}
+.mnum{font-family:var(--font-m);font-size:9px;color:var(--text2);min-width:22px;text-align:right;}
+.m-cyan{background:linear-gradient(90deg,var(--cyan),#0099bb);}
+.m-mag{background:linear-gradient(90deg,var(--magenta),#cc1155);}
+.m-amber{background:linear-gradient(90deg,var(--amber),#cc8800);}
+.m-green{background:linear-gradient(90deg,var(--green),#22cc00);}
+.m-violet{background:linear-gradient(90deg,var(--violet),#8833cc);}
+.m-white{background:linear-gradient(90deg,var(--white),#999);}
+.m-teal{background:linear-gradient(90deg,#00ffcc,#00bb99);}
+.cost-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0;}
+.cb-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;}
+.cb-lbl{font-family:var(--font-m);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:3px;}
+.cb-val{font-size:13px;font-weight:700;color:var(--white);}
+.cb-sub{font-size:10px;color:var(--text2);margin-top:2px;}
+.cwhy{font-size:12px;color:var(--text);line-height:1.6;padding:9px 11px;background:var(--bg3);border-radius:var(--radius);margin:7px 0;border-left:2px solid var(--cyan);}
+.exbtn{font-family:var(--font-m);font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--text2);background:none;border:none;cursor:pointer;padding:5px 0 0;display:flex;align-items:center;gap:3px;width:100%;transition:color .15s;}
+.exbtn:hover{color:var(--white);}
+.exarr{transition:transform .2s;display:inline-block;}
+.xdetails{display:none;padding-top:10px;border-top:1px solid var(--border);margin-top:8px;}
+.xopen .xdetails{display:block;}
+.xsec{margin-bottom:10px;}
+.xtitle{font-family:var(--font-m);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text2);margin-bottom:5px;}
+.xtext{font-size:12px;color:var(--text);line-height:1.6;}
+.elig-bl{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:5px;}
+.ei{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:6px 9px;}
+.ek{font-family:var(--font-m);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:2px;}
+.ev{font-size:11px;color:var(--white);font-weight:500;}
+.ev-met{color:var(--green);}
+.ev-chk{color:var(--amber);}
+.ev-str{color:var(--magenta);}
+.cfoot{display:flex;align-items:center;justify-content:space-between;padding-top:9px;border-top:1px solid var(--border);gap:7px;flex-wrap:wrap;margin-top:7px;}
+.fstats{display:flex;gap:12px;flex-wrap:wrap;}
+.si{font-family:var(--font-m);font-size:10px;}
+.slbl{color:var(--text2);display:block;font-size:8px;letter-spacing:.1em;text-transform:uppercase;}
+.sval{color:var(--white);font-weight:500;}
+.fbtns{display:flex;gap:5px;flex-wrap:wrap;}
+.vbtn{font-family:var(--font-m);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--cyan);text-decoration:none;border:1px solid rgba(0,229,255,0.3);border-radius:var(--radius);padding:6px 12px;transition:all .15s;white-space:nowrap;background:rgba(0,229,255,0.04);}
+.vbtn:hover{background:var(--cyan);color:var(--bg);}
+.cmpbtn{font-family:var(--font-m);font-size:10px;letter-spacing:.05em;padding:6px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;transition:all .15s;}
+.cmpbtn.added{background:var(--magenta);border-color:var(--magenta);color:#fff;}
+/* GUIDE / CHECKLIST / COMPARE */
+.gpanel,.clpanel,.cmpanel{padding:18px;max-width:820px;}
+.gsec{margin-bottom:28px;}
+.gstitle{font-family:var(--font-d);font-size:24px;color:var(--white);letter-spacing:.04em;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.gcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;}
+.gc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;}
+.gc-icon{font-size:18px;margin-bottom:5px;}
+.gc-title{font-size:13px;font-weight:700;color:var(--white);margin-bottom:3px;}
+.gc-body{font-size:11px;color:var(--text2);line-height:1.6;}
+.tl-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.tl-dot{width:9px;height:9px;border-radius:50%;background:var(--cyan);flex-shrink:0;margin-top:4px;box-shadow:0 0 5px rgba(0,229,255,0.4);}
+.tl-when{font-family:var(--font-m);font-size:9px;color:var(--text2);letter-spacing:.1em;text-transform:uppercase;}
+.tl-what{font-size:13px;color:var(--white);font-weight:500;margin:1px 0;}
+.tl-detail{font-size:11px;color:var(--text2);line-height:1.5;}
+.clg{margin-bottom:22px;}
+.clgt{font-family:var(--font-m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text2);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.cli{display:flex;align-items:flex-start;gap:9px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.clbox{width:15px;height:15px;border:1px solid var(--border2);border-radius:2px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .15s;background:var(--bg3);}
+.cli.done .clbox{background:var(--cyan);border-color:var(--cyan);}
+.cli-inner{font-size:9px;color:var(--bg);display:none;}
+.cli.done .cli-inner{display:block;}
+.cli.done .cli-text{color:var(--text2);text-decoration:line-through;}
+.cli-text{font-size:12px;color:var(--text);line-height:1.4;}
+.cli-sub{font-size:10px;color:var(--text2);margin-top:1px;}
+.comp-grid{display:flex;gap:12px;flex-wrap:wrap;}
+.comp-col{flex:1;min-width:160px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+.cbadge{background:var(--magenta);color:#fff;font-size:9px;font-family:var(--font-m);padding:1px 5px;border-radius:10px;margin-left:3px;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--grey2);border-radius:2px;}
+@media(max-width:480px){.hdr-inner{padding:14px 14px 0;}.fcol,.rcol,.gpanel,.clpanel,.cmpanel{padding:12px;}.cbody{padding:11px;}.egrid{grid-template-columns:1fr 1fr;}.mlbl{min-width:110px;}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="filmstrip" id="fs"></div>
+  <div class="hdr-bg"></div>
+  <div class="hdr-inner">
+    <div class="hdr-badges">
+      <span class="badge bc">AI-powered</span>
+      <span class="badge bm">Film · Media · Advertising · Creative Tech</span>
+    </div>
+    <h1><span class="cc">PATH</span><br><span class="cm">FINDER</span></h1>
+    <p class="hdr-sub">Universities · film schools · colleges · workshops · online · <span>worldwide</span></p>
+  </div>
+  <nav class="nav">
+    <div class="nt on" onclick="switchTab('search',this)">⌕ Search</div>
+    <div class="nt" onclick="switchTab('guide',this)">◈ Apply guide</div>
+    <div class="nt" onclick="switchTab('checklist',this)">☑ Checklist</div>
+    <div class="nt" onclick="switchTab('compare',this)">⇄ Compare <span class="cbadge" id="cbadge" style="display:none">0</span></div>
+  </nav>
+</header>
+
+<div class="app">
+
+<div class="panel on" id="panel-search">
+<div class="fl">
+<div class="fcol">
+
+  <div class="fg">
+    <div class="fl2">Student profile</div>
+    <div class="fhint">Interests, passions, what films or media inspire you</div>
+    <textarea id="interests" placeholder="e.g. documentary about social justice, visual storytelling, love Nolan / Kubrick, want to work in advertising or branded content, music videos…" rows="3"></textarea>
+    <div style="margin-top:7px"><input type="text" id="experience" placeholder="Prior experience (short films, photography, editing, theatre…)"></div>
+  </div>
+
+  <div class="fg">
+    <div class="fl2">Discipline / specialisation</div>
+    <div class="fhint">Pick from the list — or type your own below</div>
+    <div class="pg" id="sp">
+      <span class="pill" data-v="Film Direction">Direction</span>
+      <span class="pill" data-v="Cinematography">Cinematography</span>
+      <span class="pill" data-v="Screenwriting">Screenwriting</span>
+      <span class="pill" data-v="Documentary Filmmaking">Documentary</span>
+      <span class="pill" data-v="Film Editing and Post-Production">Editing &amp; Post</span>
+      <span class="pill" data-v="Animation and Motion Graphics">Animation</span>
+      <span class="pill" data-v="Sound Design and Music for Screen">Sound Design</span>
+      <span class="pill" data-v="Television and Broadcast Production">TV / Broadcast</span>
+      <span class="pill" data-v="Visual Effects VFX and CGI">VFX / CGI</span>
+      <span class="pill" data-v="Advertising Commercial and Branded Content Production">Advertising &amp; Branded</span>
+      <span class="pill" data-v="Film Marketing Distribution and Festival Strategy">Film Marketing</span>
+      <span class="pill" data-v="Production Design and Art Direction for Film">Prod. Design</span>
+      <span class="pill" data-v="Acting for Camera and Screen Performance">Acting</span>
+      <span class="pill" data-v="Film and Television Producing and Finance">Producing</span>
+      <span class="pill" data-v="Media Studies and Film Theory">Media Theory</span>
+      <span class="pill" data-v="Music Video Production and Direction">Music Video</span>
+      <span class="pill" data-v="Games Design and Interactive Media">Games Design</span>
+      <span class="pill" data-v="Immersive Media XR AR VR and Extended Reality">Immersive / XR</span>
+      <span class="pill" data-v="Creative Technologies and Digital Innovation">Creative Tech</span>
+      <span class="pill" data-v="Advertising Strategy Brand Management and Marketing Communications">Advertising Strategy</span>
+      <span class="pill" data-v="Photography and Visual Arts">Photography</span>
+      <span class="pill" data-v="Film and Media Journalism and Criticism">Journalism</span>
+      <span class="pill" data-v="Costume Design and Wardrobe for Film">Costume Design</span>
+      <span class="pill" data-v="Make-up and Hair Design for Screen">Make-up / Hair</span>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
+      <input type="text" id="disc-other" placeholder="+ add a discipline (e.g. Fashion Film, Data Journalism…)" style="flex:1">
+      <button onclick="addCustomPill('disc-other','sp-extra')" style="font-family:var(--font-m);font-size:10px;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg4);color:var(--cyan);cursor:pointer;white-space:nowrap;flex-shrink:0;">Add</button>
+    </div>
+    <div class="pg" id="sp-extra" style="margin-top:6px;"></div>
+  </div>
+
+  <div class="fg">
+    <div class="fl2">Institution type</div>
+    <div class="fhint">Select the kinds of institutions to include — or add your own</div>
+    <div class="pg" id="tp">
+      <span class="pill on" data-v="University (degree-awarding)">University</span>
+      <span class="pill on" data-v="Dedicated Film School (e.g. NFTS, NYFA, FTII, Met Film School)">Film School</span>
+      <span class="pill on" data-v="Art and Design College (e.g. UAL, RCA, Parsons)">Art College</span>
+      <span class="pill" data-v="Conservatoire or Specialist Performing Arts College">Conservatoire</span>
+      <span class="pill" data-v="Further Education College or Community College">FE / Community College</span>
+      <span class="pill" data-v="Online Learning Platform or MOOC (e.g. Coursera, MasterClass, LinkedIn Learning)">Online Platform</span>
+      <span class="pill" data-v="Industry Training Body (e.g. ScreenSkills, BECTU, BIMA, D&AD)">Industry Body</span>
+      <span class="pill" data-v="Intensive Bootcamp or Short Programme Provider">Bootcamp</span>
+      <span class="pill" data-v="Apprenticeship Programme (UK employer-led)">Apprenticeship</span>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
+      <input type="text" id="type-other" placeholder="+ add an institution type (e.g. Religious college, NGO training…)" style="flex:1">
+      <button onclick="addCustomPill('type-other','tp-extra')" style="font-family:var(--font-m);font-size:10px;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg4);color:var(--cyan);cursor:pointer;white-space:nowrap;flex-shrink:0;">Add</button>
+    </div>
+    <div class="pg" id="tp-extra" style="margin-top:6px;"></div>
+  </div>
+
+  <div class="fg">
+    <div class="fl2">Public or private</div>
+    <div class="pg" id="pp">
+      <span class="pill on" data-v="Public government-funded institution">Public</span>
+      <span class="pill on" data-v="Private institution">Private</span>
+    </div>
+  </div>
+
+  <div class="fg">
+    <div class="fl2">Course level</div>
+    <div class="pg" id="lp">
+      <span class="pill on" data-v="Undergraduate degree (BA BSc)">Undergraduate</span>
+      <span class="pill" data-v="Postgraduate degree (MA MFA MSc)">Postgraduate</span>
+      <span class="pill" data-v="Foundation or Pre-degree year">Foundation</span>
+      <span class="pill" data-v="Short course (weeks to a few months)">Short course</span>
+      <span class="pill" data-v="Workshop (1 to 5 days intensive)">Workshop</span>
+      <span class="pill" data-v="Professional development or CPD course">Professional dev</span>
+      <span class="pill" data-v="Executive or industry programme for working professionals">Executive programme</span>
+      <span class="pill" data-v="Online certificate or diploma">Online cert</span>
+      <span class="pill" data-v="PhD or research degree">PhD</span>
+    </div>
+  </div>
+
+  <div class="fg">
+    <div class="fl2">Location — country or city</div>
+    <div class="fhint">Pick countries and/or specific cities — city-level gives more precise results</div>
+    <div style="font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:5px;margin-top:2px">Countries</div>
+    <div class="pg" id="cp">
+      <span class="pill on" data-v="United Kingdom">UK</span>
+      <span class="pill" data-v="USA">USA</span>
+      <span class="pill" data-v="India">India</span>
+      <span class="pill" data-v="Qatar">Qatar</span>
+      <span class="pill" data-v="Germany">Germany</span>
+      <span class="pill" data-v="Australia">Australia</span>
+      <span class="pill" data-v="Canada">Canada</span>
+      <span class="pill" data-v="France">France</span>
+      <span class="pill" data-v="Netherlands">Netherlands</span>
+      <span class="pill" data-v="Europe (any country)">Europe</span>
+      <span class="pill" data-v="Middle East">Middle East</span>
+      <span class="pill" data-v="Any country worldwide">Anywhere</span>
+    </div>
+    <div style="font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:5px;margin-top:12px">Popular cities</div>
+    <div class="pg" id="cityp">
+      <span class="pill" data-v="London">London</span>
+      <span class="pill" data-v="New York City">New York</span>
+      <span class="pill" data-v="Los Angeles">Los Angeles</span>
+      <span class="pill" data-v="Mumbai">Mumbai</span>
+      <span class="pill" data-v="Chennai">Chennai</span>
+      <span class="pill" data-v="Pune">Pune</span>
+      <span class="pill" data-v="Doha">Doha</span>
+      <span class="pill" data-v="Berlin">Berlin</span>
+      <span class="pill" data-v="Munich">Munich</span>
+      <span class="pill" data-v="Paris">Paris</span>
+      <span class="pill" data-v="Amsterdam">Amsterdam</span>
+      <span class="pill" data-v="Melbourne">Melbourne</span>
+      <span class="pill" data-v="Sydney">Sydney</span>
+      <span class="pill" data-v="Toronto">Toronto</span>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
+      <input type="text" id="loc-other" placeholder="+ add country or city (e.g. Tokyo, South Korea, Edinburgh…)" style="flex:1">
+      <button onclick="addCustomPill('loc-other','loc-extra')" style="font-family:var(--font-m);font-size:10px;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg4);color:var(--cyan);cursor:pointer;white-space:nowrap;flex-shrink:0;">Add</button>
+    </div>
+    <div class="pg" id="loc-extra" style="margin-top:6px;"></div>
+  </div>
+
+  <div class="fg">
+    <div class="fl2">Study mode</div>
+    <div class="pg" id="mp">
+      <span class="pill on" data-v="Full-time">Full-time</span>
+      <span class="pill" data-v="Part-time">Part-time</span>
+      <span class="pill" data-v="Online or remote learning">Online</span>
+      <span class="pill" data-v="Hybrid (mix of campus and online)">Hybrid</span>
+    </div>
+  </div>
+
+  <div class="fg">
+    <div class="fl2">Language of instruction</div>
+    <div class="pg" id="lang">
+      <span class="pill on" data-v="English">English</span>
+      <span class="pill" data-v="Hindi Tamil or Telugu">Indian languages</span>
+      <span class="pill" data-v="Arabic">Arabic</span>
+      <span class="pill" data-v="French">French</span>
+      <span class="pill" data-v="German">German</span>
+      <span class="pill" data-v="Any language">Any</span>
+    </div>
+  </div>
+
+  <div class="fg">
+    <div class="fl2">Budget</div>
+    <div class="fhint">Set your annual tuition budget. Living costs are shown separately in results.</div>
+    <div class="budget-row">
+      <button class="cbtn on" data-sym="£" data-max="80000" onclick="setCurr(this)">GBP £</button>
+      <button class="cbtn" data-sym="$" data-max="100000" onclick="setCurr(this)">USD $</button>
+      <button class="cbtn" data-sym="₹" data-max="3000000" onclick="setCurr(this)">INR ₹</button>
+      <button class="cbtn" data-sym="QAR" data-max="300000" onclick="setCurr(this)">QAR</button>
+    </div>
+    <div class="bdisp" id="bdisp">£25,000</div>
+    <div class="bsub" id="bsub">per year · tuition only</div>
+    <input type="range" id="budget" min="500" max="80000" step="500" value="25000" oninput="updateBudget(this.value)">
+  </div>
+
+  <div class="fg">
+    <div class="fl2">Eligibility &amp; student profile</div>
+    <div class="egrid">
+      <div><label>Age</label><input type="text" id="ea" placeholder="e.g. 18"></div>
+      <div><label>Nationality</label><input type="text" id="en" placeholder="e.g. Indian, Qatari"></div>
+      <div><label>Qualifications</label><input type="text" id="eq" placeholder="e.g. A-Levels, CBSE 12th"></div>
+      <div><label>English (IELTS)</label><input type="text" id="ee" placeholder="e.g. 6.5 or native"></div>
+    </div>
+    <div style="margin-top:7px">
+      <label style="font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);display:block;margin-bottom:3px">Portfolio / prior work</label>
+      <input type="text" id="ep" placeholder="e.g. 3 short films, photography portfolio, school plays">
+    </div>
+  </div>
+
+  <div class="fg">
+    <div class="fl2">Extra preferences</div>
+    <div class="pg" id="xp">
+      <span class="pill" data-v="scholarship or bursary available">Scholarships</span>
+      <span class="pill" data-v="strong industry placements and paid internships">Industry placements</span>
+      <span class="pill" data-v="international student friendly with visa support">Intl. student support</span>
+      <span class="pill" data-v="professional camera and studio equipment access">Equipment access</span>
+      <span class="pill" data-v="strong alumni network actively working in the industry">Alumni network</span>
+      <span class="pill" data-v="diverse and inclusive student community">Diversity focus</span>
+      <span class="pill" data-v="high ratio of hands-on practical production work">Hands-on focus</span>
+      <span class="pill" data-v="taught by active industry practitioners">Industry tutors</span>
+    </div>
+  </div>
+
+  <button class="sbtn" id="sbtn" onclick="doSearch()">FIND MY COURSES →</button>
+
+</div>
+
+<div class="rcol" id="rcol">
+  <div class="epty">
+    <div class="epty-icon">🎞</div>
+    <div class="epty-title">Your shortlist awaits</div>
+    <div class="epty-sub">Set your filters and hit search. 7 ranked results will appear here with full detail on every institution.</div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- GUIDE PANEL -->
+<div class="panel" id="panel-guide">
+<div class="gpanel">
+  <div class="gsec">
+    <div class="gstitle">How the ranking works</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:12px">Each result is ranked by Claude weighing several factors against your profile. It is not a league table of famous schools — it is a fit score for <em>you specifically</em>. A less-famous institution can rank #1 if it matches your budget, country, specialisation and eligibility better than a prestigious one that doesn't.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px">
+      <div class="gc"><div class="gc-title" style="color:var(--cyan)">Specialisation match</div><div class="gc-body">Does the course actually teach what you selected? A general film degree ranks lower than a specialist cinematography programme if that's what you chose.</div></div>
+      <div class="gc"><div class="gc-title" style="color:var(--cyan)">Budget fit</div><div class="gc-body">Courses within your budget rank higher. Ones that stretch or exceed it are shown but flagged — useful to know they exist even if not affordable now.</div></div>
+      <div class="gc"><div class="gc-title" style="color:var(--cyan)">Eligibility match</div><div class="gc-body">Your age, qualifications, English level and portfolio are checked against what each institution typically requires. "Likely met" ranks higher than "check required".</div></div>
+      <div class="gc"><div class="gc-title" style="color:var(--cyan)">Country preference</div><div class="gc-body">Institutions in your selected countries rank higher. If "Anywhere" is selected, country weighting is neutral.</div></div>
+      <div class="gc"><div class="gc-title" style="color:var(--cyan)">Institution type</div><div class="gc-body">Types you selected are prioritised. If you chose Film School and University, both are considered equally — unselected types only appear if the shortlist would otherwise be too thin.</div></div>
+      <div class="gc"><div class="gc-title" style="color:var(--cyan)">Profile interests</div><div class="gc-body">What you wrote in the free-text interests field is read carefully. A student who mentioned documentary and social issues will see schools with strong documentary programmes ranked higher.</div></div>
+    </div>
+  </div>
+  <div class="gsec">
+    <div class="gstitle">What to do after getting results</div>
+    <div style="display:flex;flex-direction:column;gap:0">
+      <div class="tl-item"><div class="tl-dot" style="background:var(--amber)"></div><div><div class="tl-what">Step 1 — Read all 7, don't just look at #1</div><div class="tl-detail">The #1 result is best fit on paper. But #3 or #4 might have something specific — a tutor you want to learn from, a location that suits you — that changes your decision. Read all 7 before shortlisting.</div></div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div><div class="tl-what">Step 2 — Open every "Visit" link and spend 10 minutes on each site</div><div class="tl-detail">Look for: graduate showreels (Vimeo/YouTube), current student work, who the tutors are and what they've made, equipment lists, and whether the course content looks recently updated.</div></div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div><div class="tl-what">Step 3 — Use Compare on your top 3</div><div class="tl-detail">Click ⊕ Compare on any 3 cards, then go to the Compare tab. You'll see all 8 meters side-by-side, plus tuition and eligibility — useful for a final decision conversation with family.</div></div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div><div class="tl-what">Step 4 — Tick off the Checklist items for your shortlisted schools</div><div class="tl-detail">Go to the Checklist tab. It covers open days, portfolio prep, documents, and financial planning. Each item saves as you tick it — it persists even if you close the browser.</div></div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:var(--magenta)"></div><div><div class="tl-what">Step 5 — Run a second search with different filters</div><div class="tl-detail">Change one thing — try a different country, a lower budget, or switch from Undergraduate to Foundation. You'll see how the shortlist shifts and discover options you might not have considered.</div></div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:var(--cyan)"></div><div><div class="tl-what">Step 6 — Contact institutions directly</div><div class="tl-detail">For international applicants, email the admissions office before applying. Ask: what is the IELTS requirement, when is the application deadline, is there a portfolio submission, and are there scholarships for international students.</div></div></div>
+    </div>
+  </div>
+  <div class="gsec">
+    <div class="gstitle">What to look for in a course</div>
+    <div class="gcards">
+      <div class="gc"><div class="gc-icon">🏛️</div><div class="gc-title">Accreditation</div><div class="gc-body">UK: HESA-registered, BAFTA-accredited. USA: NAST, regional accreditors. India: UGC/AICTE. Germany: state-accredited Kunsthochschule. Qatar: QAA or Ministry of Education.</div></div>
+      <div class="gc"><div class="gc-icon">🎯</div><div class="gc-title">Industry pipeline</div><div class="gc-body">Alumni credits on IMDB. Partnerships with BBC, Channel 4, Netflix, MBC, DW. Active placement programmes. Check LinkedIn for where graduates actually work.</div></div>
+      <div class="gc"><div class="gc-icon">✋</div><div class="gc-title">Practical vs theory ratio</div><div class="gc-body">Some courses are 70% theory. If you want to make films — not just study them — look for programs where students are on set from year 1. The curriculum note in each result card tells you this.</div></div>
+      <div class="gc"><div class="gc-icon">🎬</div><div class="gc-title">Facilities &amp; equipment</div><div class="gc-body">What cameras do they teach on? Is there a live studio, DI suite, Dolby mix room? Equipment access often matters more than the institution's name.</div></div>
+      <div class="gc"><div class="gc-icon">📍</div><div class="gc-title">Location &amp; safety</div><div class="gc-body">London, LA, Mumbai, Berlin, Doha — being near a production hub means real internships. Research the city's cost of living, safety record, and public transport before committing.</div></div>
+      <div class="gc"><div class="gc-icon">📈</div><div class="gc-title">Industry currency</div><div class="gc-body">Is the syllabus updated? Do tutors work in the industry today? Old courses teach obsolete workflows. Check when the course description was last revised.</div></div>
+      <div class="gc"><div class="gc-icon">🌐</div><div class="gc-title">Language of teaching</div><div class="gc-body">Germany and France have world-class film schools that teach in the local language. Confirm the primary language of lectures, assessments, and industry contacts before applying.</div></div>
+      <div class="gc"><div class="gc-icon">💸</div><div class="gc-title">True total cost</div><div class="gc-body">Tuition is just part of it. Add accommodation, food, equipment, software, travel to shoots, and visa costs. London adds ~£12–18k/yr living cost on top of tuition. Use the "include living costs" toggle in the search.</div></div>
+    </div>
+  </div>
+  <div class="gsec">
+    <div class="gstitle">UK undergraduate application timeline</div>
+    <div>
+      <div class="tl-item"><div class="tl-dot" style="background:var(--amber)"></div><div><div class="tl-when">September — 16 months before entry</div><div class="tl-what">Start building your portfolio seriously</div><div class="tl-detail">Make short films, even on your phone. Story and composition beat expensive kit. Start a Vimeo or portfolio site for your work.</div></div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div><div class="tl-when">October — 15 months before</div><div class="tl-what">Open UCAS, research shortlist, attend open days</div><div class="tl-detail">UCAS opens for next cycle. Open days run Oct–Nov. You get 5 choices. Use PATH FINDER to shortlist before committing.</div></div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:var(--magenta)"></div><div><div class="tl-when">January 29 — Main UCAS deadline</div><div class="tl-what">All undergraduate applications submitted</div><div class="tl-detail">Personal statement (4000 chars), predicted grades, reference. Critical deadline — don't miss it.</div></div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div><div class="tl-when">February – May</div><div class="tl-what">Interviews, portfolio reviews, auditions</div><div class="tl-detail">Film schools often interview. Some want a short film submission, written treatment, or in-person portfolio day. Check each school specifically.</div></div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:var(--cyan)"></div><div><div class="tl-when">May – July</div><div class="tl-what">Accept offers — firm and insurance choices</div><div class="tl-detail">Conditional offers tied to exam results. Firm = first choice. Insurance = backup. Both lock in via UCAS.</div></div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:var(--green)"></div><div><div class="tl-when">August — Results day</div><div class="tl-what">Confirmation or Clearing</div><div class="tl-detail">Met your offer = confirmed. Didn't = Clearing opens immediately. Act fast, call universities directly.</div></div></div>
+    </div>
+  </div>
+  <div class="gsec">
+    <div class="gstitle">Key scholarships to research</div>
+    <div class="gcards">
+      <div class="gc"><div class="gc-icon">🏅</div><div class="gc-title">BAFTA scholarships (UK)</div><div class="gc-body">Means-tested, competitive. Apply separately from your UCAS application. For UK students at partner film schools.</div></div>
+      <div class="gc"><div class="gc-icon">🌍</div><div class="gc-title">Chevening (international → UK)</div><div class="gc-body">UK government postgraduate scholarships. 160+ countries eligible. Covers full fees and living costs. Extremely competitive.</div></div>
+      <div class="gc"><div class="gc-icon">🇮🇳</div><div class="gc-title">FTII and SRFTI (India)</div><div class="gc-body">Government institutions in Pune and Kolkata. Heavily subsidised — among the best value film education routes in the world.</div></div>
+      <div class="gc"><div class="gc-icon">🎓</div><div class="gc-title">Fulbright (USA)</div><div class="gc-body">US government scholarship for international students. Covers nearly everything. Very competitive, apply a year in advance.</div></div>
+      <div class="gc"><div class="gc-icon">🕌</div><div class="gc-title">Qatar Foundation</div><div class="gc-body">QF scholarships for students in Qatar and regionally. Education City Doha hosts several international university branches with dedicated funding.</div></div>
+      <div class="gc"><div class="gc-icon">🇩🇪</div><div class="gc-title">DAAD (Germany)</div><div class="gc-body">German Academic Exchange Service — scholarships for international students to study in Germany. Many German film schools (HFF, DFFB) charge no tuition at all.</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CHECKLIST PANEL -->
+<div class="panel" id="panel-checklist">
+<div class="clpanel" id="cl-content">
+  <div class="epty"><div class="epty-icon">☑</div><div class="epty-title">Loading checklist…</div></div>
+</div>
+</div>
+
+<!-- COMPARE PANEL -->
+<div class="panel" id="panel-compare">
+<div class="cmpanel" id="cmp-content">
+  <div class="epty"><div class="epty-icon">⇄</div><div class="epty-title">Nothing to compare yet</div><div class="epty-sub">Run a search, then click ⊕ Compare on up to 3 result cards.</div></div>
+</div>
+</div>
+
+</div>
+
+<script>
+const fs=document.getElementById('fs');
+for(let i=0;i<60;i++){const s=document.createElement('div');s.className='fs';if(i%4===0){s.style.background='var(--cyan)';s.style.opacity='.5';}else if(i%7===2){s.style.background='var(--magenta)';s.style.opacity='.4';}fs.appendChild(s);}
+
+function switchTab(id,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));
+  document.getElementById('panel-'+id).classList.add('on');
+  el.classList.add('on');
+  if(id==='checklist')renderCL();
+  if(id==='compare')renderCmp();
+}
+
+function initPills(id){
+  document.querySelectorAll('#'+id+' .pill').forEach(p=>{
+    p.addEventListener('click',()=>p.classList.toggle('on'));
+  });
+}
+['sp','tp','pp','lp','cp','mp','lang','xp'].forEach(initPills);
+
+function getSel(id){return[...document.querySelectorAll('#'+id+' .pill.on')].map(p=>p.dataset.v);}
+
+function addCustomPill(inputId, targetId){
+  const inp=document.getElementById(inputId);
+  const val=inp.value.trim();
+  if(!val)return;
+  const container=document.getElementById(targetId);
+  const p=document.createElement('span');
+  p.className='pill on';
+  p.dataset.v=val;
+  p.textContent=val+' ×';
+  p.addEventListener('click',()=>p.remove());
+  container.appendChild(p);
+  inp.value='';
+}
+document.getElementById('disc-other').addEventListener('keydown',e=>{if(e.key==='Enter')addCustomPill('disc-other','sp-extra');});
+document.getElementById('type-other').addEventListener('keydown',e=>{if(e.key==='Enter')addCustomPill('type-other','tp-extra');});
+document.getElementById('loc-other').addEventListener('keydown',e=>{if(e.key==='Enter')addCustomPill('loc-other','loc-extra');});
+
+['cityp'].forEach(initPills);
+
+function getLocations(){
+  const countries=getSel('cp');
+  const cities=getSel('cityp');
+  const extra=[...document.querySelectorAll('#loc-extra .pill')].map(p=>p.dataset.v);
+  return [...new Set([...countries,...cities,...extra])];
+}
+
+function getDiscs(){
+  const main=getSel('sp');
+  const extra=[...document.querySelectorAll('#sp-extra .pill')].map(p=>p.dataset.v);
+  return [...new Set([...main,...extra])];
+}
+
+function getTypes(){
+  const main=getSel('tp');
+  const extra=[...document.querySelectorAll('#tp-extra .pill')].map(p=>p.dataset.v);
+  return [...new Set([...main,...extra])];
+}
+
+let sym='£';
+function setCurr(btn){
+  document.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  sym=btn.dataset.sym;
+  const sl=document.getElementById('budget');
+  sl.max=btn.dataset.max;
+  sl.value=Math.min(sl.value,btn.dataset.max);
+  updateBudget(sl.value);
+}
+function updateBudget(v){
+  const n=parseInt(v);
+  let label;
+  if(sym==='₹')label=n>=100000?`₹${(n/100000).toFixed(1)}L`:`₹${n.toLocaleString('en-IN')}`;
+  else if(sym==='QAR')label=`QAR ${Math.round(n/1000)}k`;
+  else label=`${sym}${Math.round(n/1000)}k`;
+  document.getElementById('bdisp').textContent=label;
+  document.getElementById('bsub').textContent=`per year · tuition only`;
+}
+
+let results=[];
+let cmpList=[];
+
+async function doSearch(){
+  const interests=document.getElementById('interests').value.trim();
+  const exp=document.getElementById('experience').value.trim();
+  const specs=getDiscs();
+  const types=getTypes();
+  const pubpriv=getSel('pp');
+  const levels=getSel('lp');
+  const locations=getLocations();
+  const modes=getSel('mp');
+  const langs=getSel('lang');
+  const extras=getSel('xp');
+  const budget=document.getElementById('budget').value;
+  const ea=document.getElementById('ea').value.trim();
+  const en=document.getElementById('en').value.trim();
+  const eq=document.getElementById('eq').value.trim();
+  const ee=document.getElementById('ee').value.trim();
+  const ep=document.getElementById('ep').value.trim();
+
+  if(!interests&&specs.length===0){
+    document.getElementById('rcol').innerHTML=`<div class="errbox">Please add some interests or select at least one specialisation before searching.</div>`;
+    return;
+  }
+
+  const btn=document.getElementById('sbtn');
+  btn.disabled=true;btn.textContent='SEARCHING…';
+  document.getElementById('rcol').innerHTML=`<div class="loading"><div class="fl-loader">${'<div class="flf"></div>'.repeat(5)}</div><div class="ltxt">scanning ${types.length||3}+ institution types across ${locations.length||5}+ locations…</div></div>`;
+
+  const costNote=`Annual tuition budget: ${sym}${parseInt(budget).toLocaleString()} per year. Return tuition per year, total tuition for full course duration, and living costs separately.`;
+
+  const prompt=`You are a world-leading film and media education advisor. Return a JSON array of exactly 7 institutions ranked by best fit for this student.
+
+STUDENT PROFILE:
+- Interests and passions: ${interests||'not specified'}
+- Prior experience: ${exp||'none stated'}
+- Specialisations wanted: ${specs.length?specs.join(', '):'general film and media'}
+- Institution types wanted: ${types.length?types.join(', '):'any'}
+- Public or private preference: ${pubpriv.join(' and ')||'any'}
+- Course levels wanted: ${levels.length?levels.join(', '):'undergraduate'}
+- Locations preferred (countries and/or specific cities): ${locations.length?locations.join(', '):'any'}
+- Study mode: ${modes.join(', ')||'any'}
+- Language of instruction: ${langs.join(', ')||'English'}
+- Extra preferences: ${extras.join(', ')||'none'}
+- ${costNote}
+- Age: ${ea||'not stated'}
+- Nationality: ${en||'not stated'}
+- Qualifications: ${eq||'not stated'}
+- English proficiency: ${ee||'not stated'}
+- Portfolio: ${ep||'not stated'}
+
+IMPORTANT LOCATION RULE: If specific cities are listed (e.g. London, Mumbai, Chennai, Los Angeles), prioritise institutions in or very near those cities. If only countries are listed, any city in that country is fine. If both cities and countries are listed, city-level matches rank higher.
+
+RANKING LOGIC: Rank primarily by specialisation match, then budget fit, then eligibility match, then location preference, then institution type match. A well-matched lower-prestige institution should rank above a famous one that doesn't fit the profile.
+
+Return this exact JSON structure for each institution:
+{
+  "rank": 1,
+  "name": "Full official institution name",
+  "program": "Specific degree or course name as listed by the institution",
+  "institution_type": "University (degree-awarding)|Dedicated Film School|Art and Design College|Conservatoire|FE / Community College|Online Platform|Industry Body|Bootcamp|Apprenticeship",
+  "ownership": "Public|Private",
+  "country": "Country",
+  "city": "City",
+  "annual_tuition": "e.g. £9,250/yr — tuition fee per year only",
+  "total_tuition": "e.g. £27,750 total — annual tuition multiplied by number of years",
+  "estimated_living": "e.g. £12,000/yr — living costs only (accommodation, food, transport). SEPARATE from tuition, never combine them",
+  "duration": "e.g. 3 years or 10 weeks",
+  "mode": "Full-time|Part-time|Online|Hybrid",
+  "language_of_instruction": "e.g. English",
+  "url": "real verified official URL",
+  "disciplines": ["up to 3 focus areas most relevant to this student"],
+  "why_match": "3 sentences explaining specifically why this institution fits THIS student's stated interests, goals and background. Be concrete and specific, not generic.",
+  "eligibility": {
+    "min_age": "e.g. 18+",
+    "qualifications": "e.g. 2 A-levels or equivalent",
+    "english": "e.g. IELTS 6.5 overall",
+    "portfolio": "e.g. Short film plus written treatment required",
+    "interview": "e.g. Portfolio review day at campus",
+    "international": "e.g. Active international intake, Student Visa support available"
+  },
+  "eligibility_status": "likely met|check required|may be stretching",
+  "meters": {
+    "programme_fit": 1-10,
+    "industry_reputation": 1-10,
+    "hands_on_practical": 1-10,
+    "safety_and_location": 1-10,
+    "work_exposure_proximity": 1-10,
+    "alumni_in_industry": 1-10,
+    "cv_prestige": 1-10,
+    "industry_currency": 1-10
+  },
+  "scholarships": "e.g. BAFTA scholarship eligible, means-tested bursaries available — or None known",
+  "intake": "e.g. September only or Rolling",
+  "application_tip": "One specific practical tip for this student applying to this institution",
+  "standout_fact": "One impressive or surprising fact most people do not know about this institution",
+  "skills_curriculum_note": "Describe the practical to theory ratio. e.g. 70 percent studio production 30 percent theory. Students shoot on Arri Alexa from year 1."
+}
+
+Important rules:
+- Every institution must be real and verifiable with a working URL
+- If Germany is in locations: include HFF Munich, DFFB Berlin, or Filmakademie Baden-Württemberg as appropriate
+- If Qatar or Doha is in locations: include Northwestern University in Qatar or Virginia Commonwealth University Qatar
+- If India, Mumbai, Chennai or Pune is in locations: include FTII Pune or SRFTI Kolkata as affordable public options where budget fits
+- If budget is low: prioritise subsidised public institutions
+- Mix institution types sensibly — do not return 7 universities if film schools were selected
+- Match language of instruction to stated preference
+- Return ONLY a valid JSON array — no markdown, no explanation, no backticks`;
+
+  try{
+    const r=await fetch('https://pathfinder-api.paulnaan.workers.dev',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'X-Password':'@inception'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:3500,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const d=await r.json();
+    if(d.error)throw new Error(d.error.message||'API error');
+    const raw=d.content?.find(b=>b.type==='text')?.text||'';
+    const clean=raw.replace(/```json|```/g,'').trim();
+    results=JSON.parse(clean);
+    renderResults(results);
+  }catch(e){
+    document.getElementById('rcol').innerHTML=`<div class="errbox"><strong>Search failed:</strong> ${e.message}<br><br>This tool requires the Anthropic API. When opened as a file in a browser it needs a backend proxy — see the deployment guide for how to run it properly.</div>`;
+  }
+  btn.disabled=false;btn.textContent='FIND MY COURSES →';
+}
+
+function rankCls(r){return r===1?'r1':r===2?'r2':r===3?'r3':'';}
+function typeCls(t){
+  if(!t)return't-uni';
+  if(t.includes('Film School'))return't-film';
+  if(t.includes('Online')||t.includes('Platform'))return't-online';
+  if(t.includes('Short')||t.includes('Training')||t.includes('Bootcamp')||t.includes('Apprentice')||t.includes('Industry Body'))return't-short';
+  if(t.includes('College')||t.includes('Conservatoire'))return't-col';
+  return't-uni';
+}
+function eligCls(s){return s==='likely met'?'ev-met':s==='may be stretching'?'ev-str':'ev-chk';}
+function eligLbl(s){return s==='likely met'?'✓ eligible':s==='may be stretching'?'⚠ may stretch':'? check needed';}
+
+const mDefs=[
+  {key:'programme_fit',lbl:'Programme fit',cls:'m-cyan'},
+  {key:'industry_reputation',lbl:'Industry reputation',cls:'m-mag'},
+  {key:'hands_on_practical',lbl:'Hands-on practical',cls:'m-amber'},
+  {key:'safety_and_location',lbl:'Safety & location',cls:'m-green'},
+  {key:'work_exposure_proximity',lbl:'Work exposure nearby',cls:'m-violet'},
+  {key:'alumni_in_industry',lbl:'Alumni in industry',cls:'m-teal'},
+  {key:'cv_prestige',lbl:'CV prestige',cls:'m-white'},
+  {key:'industry_currency',lbl:'Up-to-date syllabus',cls:'m-amber'},
+];
+
+function renderResults(unis){
+  const col=document.getElementById('rcol');
+  if(!unis||!unis.length){
+    col.innerHTML=`<div class="epty"><div class="epty-icon">😔</div><div class="epty-title">No results found</div><div class="epty-sub">Try broader filters — more countries, higher budget, or fewer institution type restrictions.</div></div>`;
+    return;
+  }
+
+  const rankExplain=`<div class="rank-explain">
+    <div class="re-title">How these are ranked — fit score for you specifically</div>
+    <div class="re-factors">
+      <span class="re-f hi">Specialisation match</span>
+      <span class="re-f hi">Budget fit</span>
+      <span class="re-f hi">Eligibility match</span>
+      <span class="re-f">Country preference</span>
+      <span class="re-f">Institution type</span>
+      <span class="re-f">Your stated interests</span>
+    </div>
+    <div style="font-family:var(--font-m);font-size:9px;color:var(--text2);margin-top:7px;line-height:1.5">#1 is strongest overall fit — not necessarily the most famous. A well-matched lesser-known school outranks a prestigious one that doesn't suit your profile.</div>
+  </div>`;
+
+  const hdr=`<div class="rhdr"><div class="rtitle">${unis.length} COURSES FOUND</div><div class="rmeta">${getLocations().join(', ')||'worldwide'} · ranked by fit</div></div>`;
+
+  const cards=unis.map((u,i)=>{
+    const inCmp=cmpList.some(c=>c.name===u.name);
+    const m=u.meters||{};
+    const metersHtml=mDefs.map(md=>`<div class="meter-row"><span class="mlbl">${md.lbl}</span><div class="mbar"><div class="mfill ${md.cls}" style="width:${(m[md.key]||0)*10}%"></div></div><span class="mnum">${m[md.key]||0}</span></div>`).join('');
+    const elig=u.eligibility||{};
+    const eligHtml=Object.entries({'Min age':elig.min_age||'—','Qualifications':elig.qualifications||'—','English':elig.english||'—','Portfolio':elig.portfolio||'—','Interview':elig.interview||'—','Intl. students':elig.international||'—'}).map(([k,v])=>`<div class="ei"><div class="ek">${k}</div><div class="ev">${v}</div></div>`).join('');
+    const tags=(u.disciplines||[]).map(d=>`<span class="tag">${d}</span>`).join('');
+    const langTag=u.language_of_instruction?`<span class="tag tag-lang">${u.language_of_instruction}</span>`:'';
+    const ownerTag=u.ownership?`<span class="tag ${u.ownership==='Public'?'tag-pub':'tag-pvt'}">${u.ownership}</span>`:'';
+    const ecls=eligCls(u.eligibility_status);
+    const ecolor=ecls==='ev-met'?'rgba(57,255,20,0.3)':ecls==='ev-str'?'rgba(255,45,120,0.3)':'rgba(255,179,0,0.3)';
+
+    return`<div class="rcard ${rankCls(u.rank)}" style="animation-delay:${i*.06}s" id="rc-${i}">
+      <div class="crankbar"></div>
+      <div class="cbody">
+        <div class="ctop">
+          <div class="cnum">#${u.rank}</div>
+          <div class="cinfo">
+            <div class="cname">${u.name}</div>
+            <div class="cprog">${u.program}</div>
+            <div class="cloc">📍 ${u.city}, ${u.country} · ${u.mode||''}</div>
+          </div>
+          <span class="ctype ${typeCls(u.institution_type)}">${u.institution_type||'Institution'}</span>
+        </div>
+        <div class="ctags">${tags}${langTag}${ownerTag}<span class="tag" style="color:var(--${ecls==='ev-met'?'green':ecls==='ev-str'?'magenta':'amber'});border-color:${ecolor}">${eligLbl(u.eligibility_status)}</span></div>
+        <div class="meters">${metersHtml}</div>
+        <div class="cwhy">${u.why_match}</div>
+        <div class="cost-breakdown">
+          <div class="cb-item"><div class="cb-lbl">Tuition per year</div><div class="cb-val">${u.annual_tuition||'—'}</div></div>
+          <div class="cb-item"><div class="cb-lbl">Total tuition (full course)</div><div class="cb-val" style="color:var(--amber)">${u.total_tuition||'—'}</div></div>
+          <div class="cb-item" style="grid-column:1/-1"><div class="cb-lbl">Living costs only (per year · separate from tuition)</div><div class="cb-val" style="color:var(--text)">${u.estimated_living||'—'}</div><div class="cb-sub">accommodation + food + transport · not added to tuition above</div></div>
+        </div>
+        <button class="exbtn" onclick="toggleX(this)"><span class="exarr">▾</span><span class="exlbl"> show eligibility &amp; full details</span></button>
+        <div class="xdetails">
+          <div class="xsec"><div class="xtitle">Eligibility requirements</div><div class="elig-bl">${eligHtml}</div></div>
+          <div class="xsec"><div class="xtitle">Practical curriculum ratio</div><div class="xtext" style="color:var(--cyan)">${u.skills_curriculum_note||'—'}</div></div>
+          <div class="xsec"><div class="xtitle">Scholarships &amp; funding</div><div class="xtext">${u.scholarships||'None specified — check institution website directly'}</div></div>
+          <div class="xsec"><div class="xtitle">Application tip for you</div><div class="xtext" style="color:var(--amber)">${u.application_tip||'—'}</div></div>
+          <div class="xsec"><div class="xtitle">Did you know</div><div class="xtext" style="color:var(--violet)">${u.standout_fact||'—'}</div></div>
+        </div>
+        <div class="cfoot">
+          <div class="fstats">
+            <div class="si"><span class="slbl">Tuition/yr</span><span class="sval">${u.annual_tuition||'—'}</span></div>
+            <div class="si"><span class="slbl">Total tuition</span><span class="sval" style="color:var(--amber)">${u.total_tuition||'—'}</span></div>
+            <div class="si"><span class="slbl">Duration</span><span class="sval">${u.duration||'—'}</span></div>
+            <div class="si"><span class="slbl">Intake</span><span class="sval">${u.intake||'Sept'}</span></div>
+          </div>
+          <div class="fbtns">
+            <button class="cmpbtn${inCmp?' added':''}" id="cb-${i}" onclick="toggleCmp(${i})">${inCmp?'✓ Added':'⊕ Compare'}</button>
+            <a href="${u.url}" target="_blank" rel="noopener" class="vbtn">Visit →</a>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const nextSteps=`<div class="next-steps">
+    <div class="ns-title">WHAT TO DO NEXT</div>
+    <div class="ns-steps">
+      <div class="ns-step"><div class="ns-num">1</div><div class="ns-text"><strong>Read all 7 cards</strong> — don't just go with #1. Open every Visit link and spend 10 min on each site.</div></div>
+      <div class="ns-step"><div class="ns-num">2</div><div class="ns-text"><strong>Expand cards</strong> using "show eligibility & full details" to check requirements match your profile.</div></div>
+      <div class="ns-step"><div class="ns-num">3</div><div class="ns-text"><strong>Add your top 3 to Compare</strong> using the ⊕ button, then switch to the Compare tab for a side-by-side view.</div></div>
+      <div class="ns-step"><div class="ns-num">4</div><div class="ns-text"><strong>Go to the Checklist tab</strong> to track open days, portfolio prep, documents and financial planning.</div></div>
+      <div class="ns-step"><div class="ns-num">5</div><div class="ns-text"><strong>Run another search</strong> with different filters — try a different country or lower budget to discover more options.</div></div>
+    </div>
+  </div>`;
+
+  col.innerHTML=rankExplain+hdr+`<div class="cg">${cards}</div>`+nextSteps;
+}
+
+function toggleX(btn){
+  const card=btn.closest('.rcard');
+  card.classList.toggle('xopen');
+  const open=card.classList.contains('xopen');
+  btn.querySelector('.exarr').style.transform=open?'rotate(180deg)':'rotate(0deg)';
+  btn.querySelector('.exlbl').textContent=open?' hide details':' show eligibility & full details';
+}
+
+function toggleCmp(i){
+  const u=results[i];
+  if(!u)return;
+  const idx=cmpList.findIndex(c=>c.name===u.name);
+  if(idx>=0){
+    cmpList.splice(idx,1);
+  } else {
+    if(cmpList.length>=3){alert('You can compare up to 3 institutions at a time.');return;}
+    cmpList.push(u);
+  }
+  const cnt=cmpList.length;
+  const badge=document.getElementById('cbadge');
+  badge.style.display=cnt>0?'inline':'none';
+  badge.textContent=cnt;
+  const btn=document.getElementById('cb-'+i);
+  if(btn){
+    const inC=cmpList.some(c=>c.name===u.name);
+    btn.textContent=inC?'✓ Added':'⊕ Compare';
+    btn.classList.toggle('added',inC);
+  }
+}
+
+function renderCmp(){
+  const el=document.getElementById('cmp-content');
+  if(!cmpList.length){
+    el.innerHTML=`<div class="epty"><div class="epty-icon">⇄</div><div class="epty-title">Nothing to compare</div><div class="epty-sub">Run a search and click ⊕ Compare on up to 3 result cards, then come back here.</div></div>`;
+    return;
+  }
+  const mColors={ev_met:'var(--green)',ev_chk:'var(--amber)',ev_str:'var(--magenta)'};
+  const cols=cmpList.map(u=>{
+    const ecls=eligCls(u.eligibility_status);
+    const ecolor=mColors[ecls.replace('-','_')]||'var(--amber)';
+    const mHtml=mDefs.map(md=>`
+      <div style="margin-bottom:8px">
+        <div style="font-family:var(--font-m);font-size:8px;color:var(--text2);letter-spacing:.06em;margin-bottom:3px">${md.lbl}</div>
+        <div style="display:flex;align-items:center;gap:5px">
+          <div style="flex:1;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden"><div class="mfill ${md.cls}" style="width:${((u.meters||{})[md.key]||0)*10}%"></div></div>
+          <span style="font-family:var(--font-m);font-size:9px;color:var(--white);min-width:16px;text-align:right">${(u.meters||{})[md.key]||0}</span>
+        </div>
+      </div>`).join('');
+    return`<div class="comp-col">
+      <div style="font-family:var(--font-m);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:4px">${u.institution_type||'Institution'}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--white);margin-bottom:3px;line-height:1.3">${u.name}</div>
+      <div style="font-size:11px;color:var(--cyan);margin-bottom:3px;line-height:1.3">${u.program}</div>
+      <div style="font-family:var(--font-m);font-size:9px;color:var(--text2);margin-bottom:12px">📍 ${u.city}, ${u.country}</div>
+      ${mHtml}
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
+        <div style="font-family:var(--font-m);font-size:8px;color:var(--text2);margin-bottom:2px">TUITION / YEAR</div>
+        <div style="font-family:var(--font-d);font-size:18px;color:var(--amber);margin-bottom:6px">${u.annual_tuition||'—'}</div>
+        <div style="font-family:var(--font-m);font-size:8px;color:var(--text2);margin-bottom:2px">LIVING / YEAR</div>
+        <div style="font-size:12px;color:var(--text);margin-bottom:6px">${u.estimated_living||'—'}</div>
+        <div style="font-family:var(--font-m);font-size:8px;color:var(--text2);margin-bottom:2px">DURATION</div>
+        <div style="font-size:12px;color:var(--text);margin-bottom:8px">${u.duration||'—'}</div>
+        <div style="font-family:var(--font-m);font-size:8px;color:var(--text2);margin-bottom:2px">ELIGIBILITY</div>
+        <div style="font-size:11px;font-weight:500;color:${ecolor}">${eligLbl(u.eligibility_status)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML=`<div class="comp-grid">${cols}</div>
+    <button onclick="clearCmp()" style="margin-top:14px;font-family:var(--font-m);font-size:10px;padding:7px 14px;border:1px solid var(--border2);border-radius:2px;background:transparent;color:var(--text2);cursor:pointer">Clear comparison</button>`;
+}
+
+function clearCmp(){
+  cmpList=[];
+  document.getElementById('cbadge').style.display='none';
+  renderCmp();
+}
+
+const clData={
+  'Before applying':[
+    {t:'Research 8–10 institutions',s:'Use PATH FINDER across different countries and institution types — run at least 3 different searches'},
+    {t:'Attend open days (virtual or in-person)',s:'Book via each institution website, usually September–November'},
+    {t:'Watch graduate showreels on Vimeo and YouTube',s:'Quality of final year work instantly reveals teaching quality'},
+    {t:'Check UCAS or direct application portals',s:'UK undergrad = UCAS (max 5 choices). Most postgrad and international = apply direct to institution'},
+    {t:'Verify your qualifications meet entry requirements',s:'Check both firm and insurance choices if using UCAS'},
+    {t:'Email the admissions office with your questions',s:'Ask about IELTS requirements, portfolio submission, deadlines, and scholarships for international students'},
+  ],
+  'Portfolio and creative work':[
+    {t:'Make at least one short film (phone is fine)',s:'Story and intentionality beat expensive kit. 2–5 minutes is ideal'},
+    {t:'Write a 1–2 page film treatment',s:'Describe a film you want to make. Logline, tone, visual approach, why now. Most schools ask for this'},
+    {t:'Build a Vimeo or portfolio website',s:'Have a clean shareable URL — don\'t send a Google Drive link'},
+    {t:'Photograph or shoot intentionally for 30 consecutive days',s:'Builds visual literacy — framing, light, composition. Do this before applying'},
+    {t:'Get honest feedback from a teacher or working filmmaker',s:'Not friends or family — you need critical response, not encouragement'},
+  ],
+  'Application documents':[
+    {t:'Write your personal statement',s:'UCAS: 4000 characters max. Specific films that changed how you see the world > generic passion statements'},
+    {t:'Secure a reference letter — give 6+ weeks notice',s:'From a teacher, tutor, or professional who knows your creative work'},
+    {t:'Get IELTS or English test score if applying internationally',s:'Most UK institutions require 6.0–7.0. Check each school specifically'},
+    {t:'Prepare certified copies of all qualifications',s:'Translated into English if documents are in another language'},
+    {t:'Check visa requirements well in advance',s:'UK Student Visa requires a CAS number from the institution first. Germany requires a language certificate for non-English programmes'},
+  ],
+  'Financial planning':[
+    {t:'Calculate total annual cost (tuition + living)',s:'London adds £12–18k/yr. Munich adds €12–15k/yr. Use the "include living costs" toggle in the search'},
+    {t:'Research BAFTA, Chevening, DAAD, Fulbright scholarships',s:'Application deadlines often fall earlier than course application deadlines — check now'},
+    {t:'Ask each institution directly about bursaries',s:'Many film schools have needs-tested support that isn\'t advertised — you have to ask'},
+    {t:'Look into Qatar Foundation funding if in/near Qatar',s:'Education City Doha has dedicated scholarship programmes for regional students'},
+    {t:'Set a hard personal decision deadline',s:'Good programmes fill up. Don\'t let months drift while you think about it'},
+  ],
+};
+
+function renderCL(){
+  const saved=JSON.parse(localStorage.getItem('frame-cl')||'{}');
+  let html='';
+  Object.entries(clData).forEach(([g,items])=>{
+    html+=`<div class="clg"><div class="clgt">${g}</div>`;
+    items.forEach((item,i)=>{
+      const key=g+'::'+i;
+      const done=!!saved[key];
+      html+=`<div class="cli${done?' done':''}" onclick="toggleCLItem('${key.replace(/'/g,"\\'")}',this)"><div class="clbox"><span class="cli-inner">✓</span></div><div><div class="cli-text">${item.t}</div><div class="cli-sub">${item.s}</div></div></div>`;
+    });
+    html+=`</div>`;
+  });
+  document.getElementById('cl-content').innerHTML=html;
+}
+
+function toggleCLItem(key,el){
+  el.classList.toggle('done');
+  const s=JSON.parse(localStorage.getItem('frame-cl')||'{}');
+  s[key]=el.classList.contains('done');
+  localStorage.setItem('frame-cl',JSON.stringify(s));
+}
+
+updateBudget(25000);
+</script>
+</body>
+</html>

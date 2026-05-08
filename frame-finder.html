@@ -667,59 +667,59 @@ IMPORTANT LOCATION RULE: If specific cities are listed (e.g. London, Mumbai, Che
 
 RANKING LOGIC: Rank primarily by specialisation match, then budget fit, then eligibility match, then location preference, then institution type match. A well-matched lower-prestige institution should rank above a famous one that doesn't fit the profile.
 
-Return this exact JSON structure for each institution:
+Return this exact JSON structure for each institution. ALL string values must be plain ASCII — no apostrophes, no single quotes, no smart quotes, no line breaks inside strings:
 {
   "rank": 1,
   "name": "Full official institution name",
-  "program": "Specific degree or course name as listed by the institution",
-  "institution_type": "University (degree-awarding)|Dedicated Film School|Art and Design College|Conservatoire|FE / Community College|Online Platform|Industry Body|Bootcamp|Apprenticeship",
+  "program": "Specific degree or course name",
+  "institution_type": "University|Dedicated Film School|Art and Design College|Conservatoire|FE College|Online Platform|Industry Body|Bootcamp|Apprenticeship",
   "ownership": "Public|Private",
   "country": "Country",
   "city": "City",
-  "annual_tuition": "e.g. £9,250/yr — tuition fee per year only",
-  "total_tuition": "e.g. £27,750 total — annual tuition multiplied by number of years",
-  "estimated_living": "e.g. £12,000/yr — living costs only (accommodation, food, transport). SEPARATE from tuition, never combine them",
-  "duration": "e.g. 3 years or 10 weeks",
+  "annual_tuition": "e.g. GBP 9250 per year",
+  "total_tuition": "e.g. GBP 27750 total for 3 years",
+  "estimated_living": "e.g. GBP 12000 per year for accommodation food and transport only",
+  "duration": "e.g. 3 years",
   "mode": "Full-time|Part-time|Online|Hybrid",
-  "language_of_instruction": "e.g. English",
-  "url": "real verified official URL",
-  "disciplines": ["up to 3 focus areas most relevant to this student"],
-  "why_match": "3 sentences explaining specifically why this institution fits THIS student's stated interests, goals and background. Be concrete and specific, not generic.",
+  "language_of_instruction": "English",
+  "url": "https://example.ac.uk",
+  "disciplines": ["focus area 1", "focus area 2", "focus area 3"],
+  "why_match": "Two or three sentences on why this suits the student. No apostrophes. Write do not instead of dont, students instead of student's.",
   "eligibility": {
-    "min_age": "e.g. 18+",
-    "qualifications": "e.g. 2 A-levels or equivalent",
-    "english": "e.g. IELTS 6.5 overall",
-    "portfolio": "e.g. Short film plus written treatment required",
-    "interview": "e.g. Portfolio review day at campus",
-    "international": "e.g. Active international intake, Student Visa support available"
+    "min_age": "18+",
+    "qualifications": "2 A-levels or equivalent",
+    "english": "IELTS 6.5 overall",
+    "portfolio": "Short film plus written treatment required",
+    "interview": "Portfolio review day at campus",
+    "international": "Active international intake with visa support"
   },
   "eligibility_status": "likely met|check required|may be stretching",
   "meters": {
-    "programme_fit": 1-10,
-    "industry_reputation": 1-10,
-    "hands_on_practical": 1-10,
-    "safety_and_location": 1-10,
-    "work_exposure_proximity": 1-10,
-    "alumni_in_industry": 1-10,
-    "cv_prestige": 1-10,
-    "industry_currency": 1-10
+    "programme_fit": 8,
+    "industry_reputation": 7,
+    "hands_on_practical": 9,
+    "safety_and_location": 8,
+    "work_exposure_proximity": 7,
+    "alumni_in_industry": 8,
+    "cv_prestige": 7,
+    "industry_currency": 9
   },
-  "scholarships": "e.g. BAFTA scholarship eligible, means-tested bursaries available — or None known",
-  "intake": "e.g. September only or Rolling",
-  "application_tip": "One specific practical tip for this student applying to this institution",
-  "standout_fact": "One impressive or surprising fact most people do not know about this institution",
-  "skills_curriculum_note": "Describe the practical to theory ratio. e.g. 70 percent studio production 30 percent theory. Students shoot on Arri Alexa from year 1."
+  "scholarships": "BAFTA scholarship eligible and means-tested bursaries available",
+  "intake": "September only",
+  "application_tip": "One practical tip. No apostrophes.",
+  "standout_fact": "One impressive fact. No apostrophes.",
+  "skills_curriculum_note": "70 percent practical studio production and 30 percent theory. Students shoot on Arri Alexa from year 1."
 }
 
 Important rules:
 - Every institution must be real and verifiable with a working URL
-- If Germany is in locations: include HFF Munich, DFFB Berlin, or Filmakademie Baden-Württemberg as appropriate
-- If Qatar or Doha is in locations: include Northwestern University in Qatar or Virginia Commonwealth University Qatar
-- If India, Mumbai, Chennai or Pune is in locations: include FTII Pune or SRFTI Kolkata as affordable public options where budget fits
+- If Germany is in locations: include HFF Munich, DFFB Berlin, or Filmakademie Baden-Württemberg
+- If Qatar or Doha is in locations: include Northwestern University in Qatar or VCU Qatar
+- If India, Mumbai, Chennai or Pune is in locations: include FTII Pune or SRFTI Kolkata
 - If budget is low: prioritise subsidised public institutions
-- Mix institution types sensibly — do not return 7 universities if film schools were selected
+- Mix institution types — do not return 7 universities if film schools were selected
 - Match language of instruction to stated preference
-- Return ONLY a valid JSON array — no markdown, no explanation, no backticks`;
+- CRITICAL JSON RULES: Return ONLY a raw JSON array. No markdown. No backticks. No explanation before or after. No apostrophes or single quotes anywhere in any string value — write "do not" not "don't", write "students work" not "student's work". All numbers in meters fields must be plain integers not ranges. No line breaks inside string values.`;
 
   try{
     const r=await fetch('https://pathfinder-api.paulnaan.workers.dev',{
@@ -737,17 +737,34 @@ Important rules:
     const d=await r.json();
     if(d.error)throw new Error(d.error.message||'API error');
     const raw=d.content?.find(b=>b.type==='text')?.text||'';
-    // strip markdown fences and clean
+
+    // Robust extraction and sanitisation
     let clean=raw.replace(/```json|```/g,'').trim();
-    // find the JSON array boundaries robustly
     const start=clean.indexOf('[');
     const end=clean.lastIndexOf(']');
-    if(start===-1||end===-1)throw new Error('No JSON array found in response');
+    if(start===-1||end===-1)throw new Error('No JSON array in response — please try again');
     clean=clean.slice(start,end+1);
+
+    // Sanitise before parsing:
+    // 1. Normalise all quote characters
+    clean=clean.replace(/[\u2018\u2019\u02BC\u0060]/g,'\u0027'); // smart single quotes → '
+    clean=clean.replace(/[\u201C\u201D]/g,'"');                   // smart double quotes → "
+    // 2. Remove literal newlines/tabs inside string values
+    clean=clean.replace(/("(?:[^"\\]|\\.)*")/g, m =>
+      m.replace(/\n/g,' ').replace(/\r/g,'').replace(/\t/g,' ')
+    );
+    // 3. Escape any unescaped single quotes inside JSON string values
+    //    (replace ' with \u0027 only inside double-quoted strings)
+    clean=clean.replace(/("(?:[^"\\]|\\.)*")/g, m =>
+      m.replace(/'/g,'\u2019')
+    );
+    // 4. Fix trailing commas before } or ]
+    clean=clean.replace(/,(\s*[}\]])/g,'$1');
+
     results=JSON.parse(clean);
     renderResults(results);
   }catch(e){
-    document.getElementById('rcol').innerHTML=`<div class="errbox"><strong>Search failed:</strong> ${e.message}<br><br>This tool requires the Anthropic API. When opened as a file in a browser it needs a backend proxy — see the deployment guide for how to run it properly.</div>`;
+    document.getElementById('rcol').innerHTML=`<div class="errbox"><strong>Search failed:</strong> ${e.message}<br><br>Please try again — if it keeps failing, try fewer filters or a shorter interests description.</div>`;
   }
   btn.disabled=false;btn.textContent='FIND MY COURSES →';
 }

@@ -647,78 +647,15 @@ async function doSearch() {
     if (el) el.textContent = LOAD_MSGS[mi];
   }, 1800);
 
-  const SYSTEM = `You are a senior NRI property advisor — former real estate lawyer, now specialist in Kerala and Tamil Nadu land markets, with 25 years of NRI settlement consultancy. You have deep knowledge of Kerala flood zones, land classification law (Purayidam vs Nilam), FEMA NRI purchase rules, Palakkad Tamil belt culture, Kottayam property market, and traditional/organic construction.
+  const SYSTEM = `NRI property advisor, Kerala/Tamil Nadu specialist. User: Tamil NRI couple, Chennai origin, Qatar 20yrs, budget INR 40-60L, want 20-35 cents Purayidam land, peaceful rural near Athirampuzha Kottayam (friend lives there), Tamil cultural fit important, traditional laterite home planned, investment appreciation critical - avoid saturated prices.
 
-User profile: NRI couple from Chennai (Tamil), based in Qatar 20 years, budget INR 40–60L for land (plan to build laterite/wood traditional home). Friend lives near Athirampuzha, Kottayam. Kids near/entering university. Looking for 20–35 cents elevated, flood-safe Purayidam land in peaceful rural setting but within reach of hospitals, airports, and amenities. Want Tamil cultural accessibility. Investment appreciation is important — do NOT want to buy at a saturated price.
+Find real/realistic listings for requested area. Return ONLY a JSON array - no markdown, no text outside array. 8-10 properties.
 
-Your task: Find real or market-realistic property listings for the requested area. Evaluate each on 12 dimensions. Be an honest advisor — flag problems clearly. Return ONLY a JSON array.
+Each object: {"id":"str","title":"str","location":"village,district,state","type":"land|house|farmhouse","price_lakhs":number,"size_cents":number,"price_per_cent":number,"built_sqft":number,"dist_airport_km":number,"dist_hospital_km":number,"dist_railway_km":number,"dist_bus_km":number,"dist_city_km":number,"dist_friend_km":number,"nearest_airport":"str","nearest_hospital":"str","nearest_railway":"str","land_type":"Purayidam|Nilam|Agricultural|Mixed|Unknown","invest_grade":"A|B|C|D","invest_note":"str","appreciation_pct":number,"rental_yield_pct":number,"source":"str","source_url":"str","summary":"2 sentences with red flags","flags":[{"type":"ok|warn|alert","text":"str"}],"dims":{"flood":1-10,"greenery":1-10,"connect":1-10,"hospital":1-10,"community":1-10,"peace":1-10,"legal":1-10,"invest":1-10,"water":1-10,"polstab":1-10,"disaster":1-10,"value":1-10},"overall":1-10}
 
-Each property object:
-{
-  "id": "unique_string",
-  "title": "descriptive title ≤50 chars",
-  "location": "village/town, district, state",
-  "type": "land|house|farmhouse",
-  "price_lakhs": number,
-  "size_cents": number,
-  "price_per_cent": number (in thousands, e.g. 175 means 1.75L/cent),
-  "built_sqft": number or 0,
-  "dist_airport_km": number,
-  "dist_hospital_km": number,
-  "dist_railway_km": number,
-  "dist_bus_km": number,
-  "dist_city_km": number,
-  "dist_friend_km": number (distance from Athirampuzha — put 0 if not applicable),
-  "nearest_airport": "airport name",
-  "nearest_hospital": "hospital name",
-  "nearest_railway": "station name",
-  "land_type": "Purayidam|Nilam|Agricultural|Mixed|Unknown",
-  "rera_status": "Applicable|NA|Unknown",
-  "source": "source site or market data",
-  "source_url": "url or empty string",
-  "invest_grade": "A|B|C|D",
-  "invest_note": "1-sentence investment note",
-  "appreciation_pct": number (estimated 5-year appreciation %),
-  "rental_yield_pct": number or 0,
-  "summary": "2 sentences — honest advisor note, any red flags",
-  "flags": [{"type": "ok|warn|alert", "text": "short flag"}],
-  "dims": {
-    "flood": 1-10,
-    "greenery": 1-10,
-    "connect": 1-10,
-    "hospital": 1-10,
-    "community": 1-10,
-    "peace": 1-10,
-    "legal": 1-10,
-    "invest": 1-10,
-    "water": 1-10,
-    "polstab": 1-10,
-    "disaster": 1-10,
-    "value": 1-10
-  },
-  "overall": 1-10
-}
+Scores: flood(10=elevated Purayidam 2018-safe,1=Nilam) greenery(10=forest/hills,1=urban) connect(10=under50km airport,5=100-150km) hospital(10=under10km major,6=20-40km) community(10=Palakkad Tamil belt,7=Kottayam mixed,5=Malayalam only) peace(10=remote village,4=main road) legal(10=clear patta Purayidam,1=Nilam) invest(10=undermarket high appreciation,4=saturated) water(10=well+river+piped) polstab(7=Kerala/TN stable) disaster(10=no risk,4=moderate flood) value(10=well below market,1=overpriced). First char [ last char ].`
 
-Scoring rules:
-flood: 10=confirmed elevated Purayidam, 2018-safe, no Meenachil/river adjacency; 5=uncertain; 1=Nilam/riverbank
-greenery: 10=forest/plantation/hills; 6=paddy fields+palms; 3=peri-urban; 1=urban
-connect: 10=<50km int airport, good rail; 7=50-100km; 5=100-150km; 3=>150km
-hospital: 10=<10km major hospital; 8=10-20km; 6=20-40km; 3=>40km
-community: 10=Palakkad Tamil belt; 7=Kottayam mixed/Tamils present; 5=pure Malayalam area
-peace: 10=remote village, no highway; 7=near tar road, quiet; 4=near main road
-legal: 10=clear patta+EC confirmed Purayidam; 7=likely Purayidam but verify; 3=agricultural/conversion needed; 1=Nilam
-invest: 10=under market, high appreciation corridor; 7=fair market, steady appreciation; 4=near saturated; 1=overpriced
-water: 10=well+river+piped all available, no flood risk to water; 5=piped only, moderate; 2=water scarcity
-polstab: Kerala: 7 (coalition but stable); TN: 7 (stable); Goa: 7; Global destinations vary
-disaster: 10=no flood/landslide/cyclone risk; 7=low risk; 4=moderate (some flood); 1=high risk
-value: 10=price well below market, room for negotiation; 7=fair; 4=slightly above; 1=overpriced for location
-
-Return 10–14 properties. Include variety — different villages, price points, types. Be specific with real village names, realistic 2025 prices. First character must be [ last must be ].`;
-
-  const USER = `Find property listings near: ${loc}
-Type: ${ptype} | Budget: ${budget} | Min size: ${minSize} cents | Region filter: ${region} | Land type: ${landtype}
-NRI from Chennai, Qatar-based. Friend at Athirampuzha, Kottayam. Tamil-speaking family. Budget ₹40–60L for land.
-Find 10–14 real or market-realistic listings. Search MagicBricks, 99acres, Housing.com, NoBroker, and Kerala local property sites. Evaluate all 12 dimensions for each. Return JSON array only.`;
+  const USER = `Location: ${loc}. Type: ${ptype}. Budget: ${budget}. Min size: ${minSize} cents. Region: ${region}. Land type: ${landtype}. Return JSON array of 8-10 properties only.`
 
   try {
     const res = await fetch(PROXY, {
@@ -726,7 +663,7 @@ Find 10–14 real or market-realistic listings. Search MagicBricks, 99acres, Hou
       headers: {'Content-Type':'application/json', 'X-Password': PASSWORD},
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 8000,
+        max_tokens: 4000,
         tools: [{type:'web_search_20250305',name:'web_search'}],
         system: SYSTEM,
         messages: [{role:'user',content:USER}]

@@ -519,6 +519,7 @@ select.inp option{background:var(--bg2);color:var(--text0);}
 
 <script>
 const PROXY = 'https://pathfinder-api.paulnaan.workers.dev';
+const PASSWORD = '@inception';
 let allResults = [];
 let page = 1;
 const PER_PAGE = 9;
@@ -713,7 +714,7 @@ Find 10–14 real or market-realistic listings. Search MagicBricks, 99acres, Hou
   try {
     const res = await fetch(PROXY, {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type':'application/json', 'X-Password': PASSWORD},
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 8000,

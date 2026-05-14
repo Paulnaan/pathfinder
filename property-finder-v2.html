@@ -331,6 +331,15 @@ select.inp option{background:var(--bg2);color:var(--text0);}
 .skel{background:linear-gradient(90deg,var(--bg2) 0%,var(--bg3) 50%,var(--bg2) 100%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--r4);}
 @keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
 
+
+/* Portal buttons */
+.btn-portal{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  color:#fff;border:none;border-radius:var(--r8);
+  padding:7px 6px;font-size:11px;font-weight:700;cursor:pointer;
+  transition:opacity .15s;width:100%;
+}
+.btn-portal:hover{opacity:0.82;}
 </style>
 </head>
 <body>
@@ -888,12 +897,20 @@ function buildCard(p, rank, sorted) {
       </div>
       <div class="card-summary">${p.summary||''}</div>
     </div>
-    <div class="card-footer">
-      ${p.source_url?`<button class="btn-prim" onclick="window.open('${p.source_url}','_blank')">View listing →</button>`:`<button class="btn-prim" onclick="qs('${p.location.split(',')[0].trim()}')">Search this area →</button>`}
-      <button class="btn-sec" onclick="toggleExpand('${id}')">Details</button>
-      <button class="btn-sec ${isCmp?'added':''}" id="cb-${id}" onclick="toggleCmp('${id}')">
-        ${isCmp?'✓ Added':'+ Compare'}
-      </button>
+    <div class="card-footer" style="flex-direction:column;gap:8px;">
+      <div style="display:flex;gap:6px;width:100%;">
+        <button class="btn-sec" onclick="toggleExpand('${id}')" style="flex:1;">📋 Details</button>
+        <button class="btn-sec ${isCmp?'added':''}" id="cb-${id}" onclick="toggleCmp('${id}')" style="flex:1;">${isCmp?'✓ Added':'⚖️ Compare'}</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;width:100%;">
+        <button class="btn-portal" style="background:#C84B31;" onclick="openPortal('99acres','${p.location}','${p.type}','${p.price_lakhs}')"><span>🏠</span> 99acres</button>
+        <button class="btn-portal" style="background:#E84040;" onclick="openPortal('magicbricks','${p.location}','${p.type}','${p.price_lakhs}')"><span>🧱</span> MagicBricks</button>
+        <button class="btn-portal" style="background:#0066CC;" onclick="openPortal('housing','${p.location}','${p.type}','${p.price_lakhs}')"><span>🔵</span> Housing.com</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;width:100%;">
+        <button class="btn-portal" style="background:#2E7D32;" onclick="openPortal('nobroker','${p.location}','${p.type}','${p.price_lakhs}')"><span>🟢</span> NoBroker</button>
+        <button class="btn-portal" style="background:#5C35A0;" onclick="openPortal('olx','${p.location}','${p.type}','${p.price_lakhs}')"><span>🔷</span> OLX</button>
+      </div>
     </div>
     <div class="detail-drawer" id="dd-${id}">
       ${buildDetailDrawer(p)}
@@ -1071,6 +1088,32 @@ function openCompare() {
 function closeModal() { document.getElementById('modal-bg').classList.remove('show'); }
 document.getElementById('modal-bg').addEventListener('click', e => { if(e.target===document.getElementById('modal-bg'))closeModal(); });
 document.getElementById('loc').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
+
+function openPortal(site, location, type, priceLakhs) {
+  const loc = location.split(',')[0].trim();
+  const districtRaw = location.split(',')[1] || '';
+  const district = districtRaw.trim();
+  const fullLoc = encodeURIComponent(loc + (district ? ' ' + district : ''));
+  const locSimple = encodeURIComponent(loc);
+  const budget = Math.round(priceLakhs * 100000);
+  const typeMap = { land: 'Plot', house: 'Residential', farmhouse: 'Farm House', any: 'Residential' };
+  const propType = typeMap[type] || 'Residential';
+
+  let url = '';
+  if (site === '99acres') {
+    url = `https://www.99acres.com/property-in-${loc.toLowerCase().replace(/\s+/g,'-')}-ffid?transaction_type=S&search_type=locality&budget_max=${budget}&property_type=P`;
+  } else if (site === 'magicbricks') {
+    url = `https://www.magicbricks.com/property-for-sale/residential-real-estate?proptype=Residential-Plot&cityName=${encodeURIComponent(district||loc)}&keyword=${fullLoc}&budgetMax=${budget}`;
+  } else if (site === 'housing') {
+    url = `https://housing.com/in/buy/searches?city=${encodeURIComponent(district||loc)}&q=${fullLoc}&budget_max=${budget}`;
+  } else if (site === 'nobroker') {
+    url = `https://www.nobroker.in/property/residential/buy/${encodeURIComponent(district||loc)}/?searchParam=${fullLoc}&budget=${budget}`;
+  } else if (site === 'olx') {
+    url = `https://www.olx.in/items/q-${locSimple}-land?filter=price_max_${budget}`;
+  }
+  window.open(url, '_blank');
+}
+
 </script>
 </body>
 </html>

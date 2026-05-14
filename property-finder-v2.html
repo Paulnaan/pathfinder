@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Property Finder — Property Intelligence</title>
+<style>
+:root{
+  --bg0:#0E1117;--bg1:#161B25;--bg2:#1E2535;--bg3:#252D3F;
+  --border:#2A3448;--border2:#374057;
+  --text0:#F0F4FF;--text1:#B8C4DA;--text2:#7A8CAA;--text3:#4A5568;
+  --green:#22C55E;--green-dim:#166534;--green-bg:#0D2818;
+  --teal:#2DD4BF;--teal-dim:#0F766E;--teal-bg:#0D2320;
+  --amber:#F59E0B;--amber-dim:#92400E;--amber-bg:#1C1407;
+  --red:#EF4444;--red-dim:#7F1D1D;--red-bg:#1C0A0A;
+  --blue:#3B82F6;--blue-dim:#1E3A8A;--blue-bg:#0A0F1C;
+  --purple:#A855F7;--purple-dim:#4C1D95;--purple-bg:#130A1E;
+  --r4:4px;--r8:8px;--r12:12px;--r16:16px;--r24:24px;
+  --shadow:0 4px 24px rgba(0,0,0,0.4);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var(--text0);min-height:100vh;line-height:1.5;}
+
+/* ── Typography ── */
+.t0{font-size:11px;color:var(--text2);}
+.t1{font-size:12px;color:var(--text1);}
+.t2{font-size:13px;color:var(--text0);}
+.t3{font-size:15px;color:var(--text0);font-weight:600;}
+.mono{font-family:'SF Mono','Fira Code',monospace;}
+
+/* ── Header ── */
+.hdr{
+  background:linear-gradient(135deg,var(--bg1) 0%,#0D1520 100%);
+  border-bottom:1px solid var(--border);
+  padding:16px 20px 14px;
+  position:sticky;top:0;z-index:200;
+}
+.hdr-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.hdr-brand{display:flex;align-items:center;gap:8px;}
+.hdr-logo{width:32px;height:32px;background:linear-gradient(135deg,var(--green),var(--teal));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.hdr-name{font-size:15px;font-weight:700;color:var(--text0);letter-spacing:-0.3px;}
+.hdr-sub{font-size:10px;color:var(--green);letter-spacing:1.5px;text-transform:uppercase;}
+.hdr-tags{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;}
+.htag{font-size:10px;padding:3px 8px;border:1px solid var(--border2);border-radius:20px;color:var(--text2);}
+
+/* ── Search Panel ── */
+.search-wrap{background:var(--bg1);border-bottom:1px solid var(--border);padding:16px 20px;}
+.search-inner{max-width:1200px;margin:0 auto;}
+
+.search-main{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.inp-wrap{position:relative;flex:1;min-width:200px;}
+.inp-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--text2);pointer-events:none;}
+.inp{
+  width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r8);
+  padding:10px 12px 10px 36px;font-size:13px;color:var(--text0);outline:none;
+  transition:border-color .15s;
+}
+.inp:focus{border-color:var(--green);}
+.inp::placeholder{color:var(--text3);}
+select.inp{padding-left:12px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A8CAA' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:calc(100% - 10px) center;}
+select.inp option{background:var(--bg2);color:var(--text0);}
+
+.search-btn{
+  background:linear-gradient(135deg,var(--green-dim),#15803D);
+  color:#fff;border:none;border-radius:var(--r8);
+  padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;
+  white-space:nowrap;transition:opacity .15s,transform .1s;
+  display:flex;align-items:center;gap:6px;
+}
+.search-btn:hover{opacity:0.9;}
+.search-btn:active{transform:scale(0.97);}
+.search-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* Filter pills row */
+.filters-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+.f-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
+.filter-sel{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r4);
+  padding:5px 8px;font-size:11px;color:var(--text1);cursor:pointer;outline:none;
+  appearance:none;
+}
+.filter-sel:focus{border-color:var(--green);}
+.filter-sel option{background:var(--bg2);}
+
+/* Quick pills */
+.pills-row{display:flex;gap:6px;flex-wrap:wrap;}
+.pill{
+  font-size:11px;padding:4px 10px;
+  border:1px solid var(--border2);border-radius:20px;
+  color:var(--text1);cursor:pointer;background:transparent;
+  transition:background .12s,border-color .12s;white-space:nowrap;
+}
+.pill:hover,.pill.on{background:var(--bg3);border-color:var(--green);color:var(--green);}
+
+/* Priority weights mini */
+.weights-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.w-chip{display:flex;align-items:center;gap:4px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r4);padding:3px 6px;}
+.w-chip label{font-size:10px;color:var(--text2);white-space:nowrap;}
+.w-chip input[type=range]{width:50px;accent-color:var(--green);}
+.w-chip .wv{font-size:10px;font-weight:700;color:var(--green);min-width:14px;}
+
+/* ── Main layout ── */
+.main{max-width:1200px;margin:0 auto;padding:16px 20px 80px;}
+
+/* Status bar */
+.status-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.status-txt{font-size:12px;color:var(--text2);}
+.status-txt strong{color:var(--text0);}
+.sort-row{display:flex;gap:4px;}
+.sort-btn{font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:var(--r4);background:transparent;color:var(--text2);cursor:pointer;transition:all .12s;}
+.sort-btn.on,.sort-btn:hover{background:var(--bg3);border-color:var(--border2);color:var(--text0);}
+
+/* ── Advisor insight ── */
+.advisor{background:var(--bg1);border:1px solid var(--teal-dim);border-radius:var(--r12);padding:14px 16px;margin-bottom:16px;display:none;}
+.advisor.show{display:block;}
+.adv-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.adv-icon{width:28px;height:28px;background:var(--teal-bg);border:1px solid var(--teal-dim);border-radius:var(--r8);display:flex;align-items:center;justify-content:center;font-size:13px;}
+.adv-title{font-size:12px;font-weight:700;color:var(--teal);}
+.adv-body{font-size:12px;color:var(--text1);line-height:1.7;}
+.adv-pills{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.adv-tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
+.adv-tag.green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-dim);}
+.adv-tag.red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-dim);}
+.adv-tag.amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-dim);}
+
+/* ── Cards ── */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin-bottom:20px;}
+@media(max-width:768px){.cards-grid{grid-template-columns:1fr;}}
+
+.pcard{
+  background:var(--bg1);border:1px solid var(--border);border-radius:var(--r16);
+  overflow:hidden;transition:border-color .2s,box-shadow .2s;
+  position:relative;cursor:default;
+}
+.pcard:hover{border-color:var(--border2);box-shadow:0 8px 32px rgba(0,0,0,0.5);}
+.pcard.top-pick{border-color:var(--green-dim);}
+
+/* Card header strip */
+.card-strip{
+  height:6px;
+  background:linear-gradient(90deg,var(--green-dim),var(--teal-dim));
+}
+.card-strip.mid{background:linear-gradient(90deg,var(--amber-dim),var(--amber));}
+.card-strip.low{background:linear-gradient(90deg,var(--red-dim),var(--red));}
+
+.card-top{padding:12px 14px 0;display:flex;justify-content:space-between;align-items:flex-start;}
+.card-rank-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--bg3);color:var(--text2);}
+.card-rank-badge.r1{background:var(--green-bg);color:var(--green);border:1px solid var(--green-dim);}
+.card-rank-badge.r2{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-dim);}
+.card-rank-badge.r3{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-dim);}
+
+.score-ring{
+  width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  background:var(--bg2);border:2px solid var(--border2);flex-shrink:0;
+}
+.score-ring.high{border-color:var(--green);}
+.score-ring.mid{border-color:var(--amber);}
+.score-ring.low{border-color:var(--red);}
+.score-num{font-size:15px;font-weight:800;line-height:1;}
+.score-num.high{color:var(--green);}
+.score-num.mid{color:var(--amber);}
+.score-num.low{color:var(--red);}
+.score-denom{font-size:8px;color:var(--text2);}
+
+.card-body{padding:10px 14px 0;}
+.card-title{font-size:14px;font-weight:700;color:var(--text0);margin-bottom:2px;line-height:1.3;}
+.card-location{font-size:11px;color:var(--teal);display:flex;align-items:center;gap:4px;margin-bottom:8px;}
+
+/* Price row */
+.price-row{display:flex;align-items:baseline;gap:8px;margin-bottom:6px;}
+.price-main{font-size:20px;font-weight:800;color:var(--green);}
+.price-unit{font-size:11px;color:var(--text2);}
+.price-per{font-size:11px;color:var(--amber);background:var(--amber-bg);padding:1px 6px;border-radius:4px;}
+
+/* Specs chips */
+.specs-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.spec{font-size:10px;padding:3px 7px;border-radius:var(--r4);border:1px solid var(--border2);color:var(--text1);display:flex;align-items:center;gap:3px;}
+.spec.g{border-color:var(--green-dim);background:var(--green-bg);color:var(--green);}
+.spec.a{border-color:var(--amber-dim);background:var(--amber-bg);color:var(--amber);}
+.spec.r{border-color:var(--red-dim);background:var(--red-bg);color:var(--red);}
+.spec.b{border-color:var(--blue-dim);background:var(--blue-bg);color:var(--blue);}
+
+/* Distance badges */
+.dist-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.dist-badge{font-size:10px;padding:3px 7px;border-radius:var(--r4);background:var(--bg2);border:1px solid var(--border);color:var(--text1);display:flex;align-items:center;gap:3px;}
+
+/* Dim bars — 2-column compact */
+.dims-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-bottom:10px;}
+.dim-row{display:flex;align-items:center;gap:5px;}
+.dim-lbl{font-size:10px;color:var(--text2);width:64px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dim-track{flex:1;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.dim-fill{height:100%;border-radius:2px;}
+.dim-fill.h{background:var(--green);}
+.dim-fill.m{background:var(--amber);}
+.dim-fill.l{background:var(--red);}
+.dim-val{font-size:9px;font-weight:700;width:14px;text-align:right;flex-shrink:0;}
+.dim-val.h{color:var(--green);}
+.dim-val.m{color:var(--amber);}
+.dim-val.l{color:var(--red);}
+
+/* Flags */
+.flags-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;}
+.flag{font-size:10px;padding:2px 7px;border-radius:10px;display:flex;align-items:center;gap:3px;}
+.flag.ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-dim);}
+.flag.warn{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-dim);}
+.flag.alert{background:var(--red-bg);color:var(--red);border:1px solid var(--red-dim);}
+
+/* Investment score bar */
+.invest-row{background:var(--bg2);border-radius:var(--r8);padding:8px 10px;margin-bottom:10px;}
+.invest-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.invest-lbl{font-size:10px;color:var(--text2);}
+.invest-grade{font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;}
+.invest-grade.A{background:var(--green-bg);color:var(--green);}
+.invest-grade.B{background:var(--teal-bg);color:var(--teal);}
+.invest-grade.C{background:var(--amber-bg);color:var(--amber);}
+.invest-grade.D{background:var(--red-bg);color:var(--red);}
+.invest-track{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.invest-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--green-dim),var(--green));}
+
+.card-summary{font-size:11px;color:var(--text2);line-height:1.65;margin-bottom:10px;padding:8px 10px;background:var(--bg2);border-radius:var(--r8);}
+
+/* Card footer actions */
+.card-footer{padding:10px 14px 14px;display:flex;gap:6px;border-top:1px solid var(--border);}
+.btn-prim{flex:1;background:var(--green-dim);color:#fff;border:none;border-radius:var(--r8);padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer;transition:opacity .12s;}
+.btn-prim:hover{opacity:0.85;}
+.btn-sec{padding:8px 12px;font-size:12px;border:1px solid var(--border2);border-radius:var(--r8);background:transparent;color:var(--text1);cursor:pointer;transition:background .12s;}
+.btn-sec:hover{background:var(--bg2);}
+.btn-sec.added{border-color:var(--green-dim);color:var(--green);}
+
+/* ── States ── */
+.state-box{text-align:center;padding:60px 20px;}
+.state-icon{font-size:48px;margin-bottom:14px;}
+.state-h{font-size:18px;font-weight:700;color:var(--text0);margin-bottom:8px;}
+.state-p{font-size:13px;color:var(--text2);max-width:440px;margin:0 auto;line-height:1.7;}
+
+.spinner{width:40px;height:40px;margin:0 auto 16px;border:3px solid var(--bg3);border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-msg{font-size:12px;color:var(--green);margin-top:8px;min-height:18px;}
+
+/* ── Pagination ── */
+.pagination{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;}
+.pg-btn{width:36px;height:36px;border:1px solid var(--border);border-radius:var(--r8);background:var(--bg1);color:var(--text1);cursor:pointer;font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.pg-btn:hover:not(.on){background:var(--bg2);}
+.pg-btn.on{background:var(--green-dim);color:#fff;border-color:var(--green-dim);}
+.pg-btn:disabled{opacity:0.3;cursor:not-allowed;}
+.pg-info{font-size:11px;color:var(--text2);padding:0 6px;}
+
+/* ── Compare bar (bottom sticky) ── */
+.cmp-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--bg1);border-top:1px solid var(--border2);
+  padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  transform:translateY(100%);transition:transform .25s;z-index:300;
+}
+.cmp-bar.show{transform:translateY(0);}
+.cmp-lbl{font-size:11px;color:var(--text2);}
+.cmp-chips{display:flex;gap:6px;flex:1;flex-wrap:wrap;}
+.cmp-chip{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r4);padding:4px 10px;font-size:11px;color:var(--text0);display:flex;align-items:center;gap:6px;}
+.cmp-x{cursor:pointer;color:var(--text2);font-size:12px;}
+.cmp-x:hover{color:var(--red);}
+.btn-cmp{background:var(--teal-dim);color:#fff;border:none;border-radius:var(--r8);padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;}
+
+/* ── Compare Modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--bg1);border:1px solid var(--border2);border-radius:var(--r16);max-width:900px;width:100%;max-height:88vh;overflow-y:auto;padding:20px;}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.modal-title{font-size:16px;font-weight:700;color:var(--text0);}
+.modal-close{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r8);padding:6px 12px;font-size:13px;color:var(--text1);cursor:pointer;}
+.cmp-table{width:100%;border-collapse:collapse;font-size:11px;}
+.cmp-table th{text-align:left;padding:8px 10px;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;background:var(--bg2);border-bottom:1px solid var(--border);}
+.cmp-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;}
+.cmp-table tr:last-child td{border-bottom:none;}
+.cmp-best{background:var(--green-bg);color:var(--green);font-weight:700;}
+.cmp-sec{font-size:9px;color:var(--text2);display:block;margin-top:2px;}
+
+/* ── Expand detail drawer ── */
+.detail-drawer{background:var(--bg2);border-radius:var(--r12);padding:14px;margin:0 14px 14px;display:none;}
+.detail-drawer.show{display:block;}
+.detail-section{margin-bottom:12px;}
+.detail-label{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.detail-item{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r8);padding:8px 10px;}
+.di-label{font-size:10px;color:var(--text2);margin-bottom:2px;}
+.di-val{font-size:12px;font-weight:600;color:var(--text0);}
+.di-val.g{color:var(--green);}
+.di-val.a{color:var(--amber);}
+.di-val.r{color:var(--red);}
+
+/* Legal panel */
+.legal-panel{background:var(--blue-bg);border:1px solid var(--blue-dim);border-radius:var(--r8);padding:10px 12px;}
+.legal-title{font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;}
+.legal-items{display:flex;flex-direction:column;gap:4px;}
+.legal-item{font-size:11px;color:var(--text1);display:flex;align-items:flex-start;gap:5px;}
+.legal-dot{color:var(--blue);flex-shrink:0;margin-top:2px;}
+
+/* ── Mobile nav ── */
+@media(max-width:600px){
+  .hdr-tags{display:none;}
+  .w-chip{display:none;}
+  .modal{padding:14px;}
+  .detail-grid{grid-template-columns:1fr;}
+  .dims-grid{grid-template-columns:1fr;}
+  .price-main{font-size:18px;}
+}
+
+/* Expand button */
+.expand-btn{
+  width:100%;background:none;border:none;border-top:1px solid var(--border);
+  padding:8px;font-size:11px;color:var(--text2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  transition:color .12s;
+}
+.expand-btn:hover{color:var(--text0);}
+.expand-arrow{transition:transform .2s;}
+.expand-arrow.open{transform:rotate(180deg);}
+
+/* Tooltip */
+.tip{position:relative;cursor:help;}
+.tip::after{
+  content:attr(data-tip);position:absolute;bottom:120%;left:50%;transform:translateX(-50%);
+  background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r4);
+  padding:4px 8px;font-size:10px;color:var(--text0);white-space:nowrap;
+  pointer-events:none;opacity:0;transition:opacity .15s;z-index:100;
+}
+.tip:hover::after{opacity:1;}
+
+/* Shimmer skeleton */
+.skel{background:linear-gradient(90deg,var(--bg2) 0%,var(--bg3) 50%,var(--bg2) 100%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--r4);}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <div class="hdr-logo">🌿</div>
+      <div>
+        <div class="hdr-name">Property Finder</div>
+        <div class="hdr-sub">Property Intelligence</div>
+      </div>
+    </div>
+    <div class="hdr-tags">
+      <span class="htag">Kerala · Tamil Nadu</span>
+      <span class="htag">NRI / OCI / PIO</span>
+      <span class="htag">AI-evaluated</span>
+      <span class="htag">60L budget</span>
+    </div>
+  </div>
+</header>
+
+<!-- SEARCH PANEL -->
+<div class="search-wrap">
+  <div class="search-inner">
+
+    <!-- Main search row -->
+    <div class="search-main">
+      <div class="inp-wrap" style="flex:2;min-width:240px;">
+        <span class="inp-icon">📍</span>
+        <input class="inp" id="loc" placeholder="Location — e.g. Athirampuzha, Kottayam · Nemmara, Palakkad · Coimbatore hills" />
+      </div>
+      <select class="inp" id="ptype" style="min-width:130px;">
+        <option value="land">Land / Plot</option>
+        <option value="house">House + Land</option>
+        <option value="farmhouse">Farm / Villa</option>
+        <option value="any">Any type</option>
+      </select>
+      <button class="search-btn" id="sbtn" onclick="doSearch()">
+        <span>🔍</span> Search &amp; Evaluate
+      </button>
+    </div>
+
+    <!-- Second filter row -->
+    <div class="filters-row">
+      <span class="f-label">Budget</span>
+      <select class="filter-sel" id="fbudget">
+        <option value="25L">≤ ₹25L</option>
+        <option value="35L">≤ ₹35L</option>
+        <option value="40L" selected>≤ ₹40L</option>
+        <option value="60L">≤ ₹60L</option>
+        <option value="75L">≤ ₹75L</option>
+        <option value="1Cr">≤ ₹1 Crore</option>
+        <option value="any">Any budget</option>
+      </select>
+      <span class="f-label">Min land</span>
+      <select class="filter-sel" id="fsize">
+        <option value="5">5+ cents</option>
+        <option value="10">10+ cents</option>
+        <option value="20" selected>20+ cents</option>
+        <option value="30">30+ cents</option>
+        <option value="50">50+ cents</option>
+        <option value="any">Any size</option>
+      </select>
+      <span class="f-label">Region</span>
+      <select class="filter-sel" id="fregion">
+        <option value="any">Any region</option>
+        <option value="kerala">Kerala only</option>
+        <option value="tamilnadu">Tamil Nadu only</option>
+        <option value="south_india">South India</option>
+        <option value="global">Global comparison</option>
+      </select>
+      <span class="f-label">Land type</span>
+      <select class="filter-sel" id="flandtype">
+        <option value="any">Any legal type</option>
+        <option value="purayidam">Purayidam only (buildable)</option>
+        <option value="agricultural">Agricultural / Farm</option>
+      </select>
+      <span class="f-label">Sort</span>
+      <select class="filter-sel" id="fsort" onchange="changeSortDirect()">
+        <option value="score">Best match</option>
+        <option value="price_asc">Price ↑ low first</option>
+        <option value="price_desc">Price ↓ high first</option>
+        <option value="flood">Flood safest</option>
+        <option value="invest">Investment grade</option>
+        <option value="connect">Best connectivity</option>
+      </select>
+    </div>
+
+    <!-- Priority weights -->
+    <div class="weights-row">
+      <span class="f-label">My priorities:</span>
+      <div class="w-chip tip" data-tip="Flood & disaster safety">
+        <label>Flood safe</label>
+        <input type="range" min="1" max="10" value="9" id="w-flood" oninput="this.nextSibling.textContent=this.value;reRank()">
+        <span class="wv">9</span>
+      </div>
+      <div class="w-chip tip" data-tip="Distance to hospital">
+        <label>Healthcare</label>
+        <input type="range" min="1" max="10" value="8" id="w-hospital" oninput="this.nextSibling.textContent=this.value;reRank()">
+        <span class="wv">8</span>
+      </div>
+      <div class="w-chip tip" data-tip="Airport & rail access">
+        <label>Connectivity</label>
+        <input type="range" min="1" max="10" value="7" id="w-connect" oninput="this.nextSibling.textContent=this.value;reRank()">
+        <span class="wv">7</span>
+      </div>
+      <div class="w-chip tip" data-tip="Tamil culture fit">
+        <label>Tamil fit</label>
+        <input type="range" min="1" max="10" value="7" id="w-community" oninput="this.nextSibling.textContent=this.value;reRank()">
+        <span class="wv">7</span>
+      </div>
+      <div class="w-chip tip" data-tip="Future appreciation">
+        <label>Investment</label>
+        <input type="range" min="1" max="10" value="8" id="w-invest" oninput="this.nextSibling.textContent=this.value;reRank()">
+        <span class="wv">8</span>
+      </div>
+      <div class="w-chip tip" data-tip="Peace & nature">
+        <label>Peaceful</label>
+        <input type="range" min="1" max="10" value="8" id="w-peace" oninput="this.nextSibling.textContent=this.value;reRank()">
+        <span class="wv">8</span>
+      </div>
+    </div>
+
+    <!-- Quick pills -->
+    <div class="pills-row" style="margin-top:10px;">
+      <span class="f-label">Quick search:</span>
+      <span class="pill" onclick="qs('Athirampuzha Kottayam Kerala')">📍 Athirampuzha</span>
+      <span class="pill" onclick="qs('Kanakkary Ettumanoor Kottayam elevated flood-free')">📍 Kanakkary</span>
+      <span class="pill" onclick="qs('Aymanam Kottayam village land')">📍 Aymanam</span>
+      <span class="pill" onclick="qs('Nemmara Palakkad Tamil area land')">📍 Nemmara</span>
+      <span class="pill" onclick="qs('Chittur Palakkad Tamil community land')">📍 Chittur</span>
+      <span class="pill" onclick="qs('Ooty Nilgiris Tamil Nadu land peaceful hill')">📍 Ooty hills</span>
+      <span class="pill" onclick="qs('Coimbatore outskirts rural land Tamil Nadu')">📍 Coimbatore</span>
+      <span class="pill" onclick="qs('Thrissur Kerala rural land investment')">📍 Thrissur</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div id="advisor" class="advisor"></div>
+  <div id="status-row" class="status-row" style="display:none;">
+    <div class="status-txt" id="status-txt"></div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <span style="font-size:11px;color:var(--text2);">View:</span>
+      <button class="sort-btn on" id="vgrid" onclick="setView('grid',this)">Grid</button>
+      <button class="sort-btn" id="vlist" onclick="setView('list',this)">List</button>
+    </div>
+  </div>
+  <div id="results"></div>
+  <div id="pagination" class="pagination" style="display:none;margin-top:20px;"></div>
+</div>
+
+<!-- INITIAL STATE -->
+<div id="init-state" class="state-box">
+  <div class="state-icon">🏡</div>
+  <div class="state-h">Find your future home</div>
+  <div class="state-p">Search for land or houses. Every result is evaluated across 12 dimensions — flood risk, distance to hospitals, airports, train stations, political stability, investment grade, Tamil community fit, legal land type, greenery, sanitation, and more. One place. No jumping between sites.</div>
+  <div style="margin-top:20px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+    <button class="search-btn" style="font-size:12px;padding:8px 16px;" onclick="qs('Athirampuzha Kottayam Kerala')">Try: Athirampuzha →</button>
+    <button class="search-btn" style="font-size:12px;padding:8px 16px;background:var(--teal-dim);" onclick="qs('Nemmara Palakkad Tamil area')">Try: Nemmara, Palakkad →</button>
+  </div>
+</div>
+
+<!-- COMPARE BAR -->
+<div class="cmp-bar" id="cmp-bar">
+  <span class="cmp-lbl">Compare:</span>
+  <div class="cmp-chips" id="cmp-chips"></div>
+  <button class="btn-cmp" onclick="openCompare()">Compare →</button>
+  <button class="btn-sec" style="font-size:11px;" onclick="clearCmp()">Clear</button>
+</div>
+
+<!-- COMPARE MODAL -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Side-by-side property comparison</div>
+      <button class="modal-close" onclick="closeModal()">✕ Close</button>
+    </div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+const PROXY = 'https://frame-finder.pahansen.workers.dev';
+let allResults = [];
+let page = 1;
+const PER_PAGE = 9;
+let cmpList = [];
+let viewMode = 'grid';
+let lastLoc = '';
+
+const DIMS = [
+  {id:'flood',    label:'Flood risk',    w:'w-flood'},
+  {id:'greenery', label:'Greenery',      w:null},
+  {id:'connect',  label:'Connectivity',  w:'w-connect'},
+  {id:'hospital', label:'Healthcare',    w:'w-hospital'},
+  {id:'community',label:'Tamil fit',     w:'w-community'},
+  {id:'peace',    label:'Peaceful',      w:'w-peace'},
+  {id:'legal',    label:'Legal clarity', w:null},
+  {id:'invest',   label:'Investment',    w:'w-invest'},
+  {id:'water',    label:'Water/sanit.',  w:null},
+  {id:'polstab',  label:'Pol. stable',  w:null},
+  {id:'disaster', label:'Disaster risk', w:null},
+  {id:'value',    label:'Value/money',   w:null},
+];
+
+const LOAD_MSGS = [
+  'Searching property listings across Kerala & Tamil Nadu…',
+  'Evaluating flood risk and elevation data…',
+  'Checking distances to hospitals, airports, rail…',
+  'Analysing investment appreciation potential…',
+  'Scoring Tamil community and social fit…',
+  'Verifying land classification (Purayidam / Nilam)…',
+  'Calculating weighted scores for your priorities…',
+  'Almost ready — ranking and formatting results…',
+];
+
+function qs(loc) {
+  document.getElementById('loc').value = loc;
+  doSearch();
+}
+
+function getWeights() {
+  const w = {};
+  DIMS.forEach(d => {
+    const el = d.w ? document.getElementById(d.w) : null;
+    w[d.id] = el ? parseInt(el.value) : 5;
+  });
+  return w;
+}
+
+function computeWeightedScore(r, weights) {
+  if (!r.dims) return r.overall || 5;
+  let ws = 0, tw = 0;
+  Object.keys(weights).forEach(k => {
+    const v = r.dims[k] || 5;
+    const wt = weights[k] || 5;
+    ws += v * wt;
+    tw += wt;
+  });
+  return tw > 0 ? parseFloat((ws / tw).toFixed(1)) : (r.overall || 5);
+}
+
+function reRank() {
+  if (allResults.length === 0) return;
+  renderResults();
+}
+
+function getSorted() {
+  const sortVal = document.getElementById('fsort').value;
+  const weights = getWeights();
+  const arr = allResults.map(r => ({
+    ...r,
+    _wscore: computeWeightedScore(r, weights)
+  }));
+
+  if (sortVal === 'score')        arr.sort((a,b) => b._wscore - a._wscore);
+  else if (sortVal === 'price_asc')  arr.sort((a,b) => a.price_lakhs - b.price_lakhs);
+  else if (sortVal === 'price_desc') arr.sort((a,b) => b.price_lakhs - a.price_lakhs);
+  else if (sortVal === 'flood')      arr.sort((a,b) => (b.dims?.flood||0) - (a.dims?.flood||0));
+  else if (sortVal === 'invest')     arr.sort((a,b) => (b.dims?.invest||0) - (a.dims?.invest||0));
+  else if (sortVal === 'connect')    arr.sort((a,b) => (b.dims?.connect||0) - (a.dims?.connect||0));
+  return arr;
+}
+
+function changeSortDirect() {
+  page = 1;
+  if (allResults.length > 0) renderResults();
+}
+
+async function doSearch() {
+  const loc = document.getElementById('loc').value.trim();
+  if (!loc) { document.getElementById('loc').focus(); return; }
+
+  const ptype   = document.getElementById('ptype').value;
+  const budget  = document.getElementById('fbudget').value;
+  const minSize = document.getElementById('fsize').value;
+  const region  = document.getElementById('fregion').value;
+  const landtype= document.getElementById('flandtype').value;
+  lastLoc = loc;
+
+  document.getElementById('sbtn').disabled = true;
+  document.getElementById('init-state').style.display = 'none';
+  document.getElementById('status-row').style.display = 'none';
+  document.getElementById('pagination').style.display = 'none';
+  document.getElementById('advisor').classList.remove('show');
+  clearCmp();
+  page = 1;
+
+  let mi = 0;
+  document.getElementById('results').innerHTML = `
+    <div class="state-box">
+      <div class="spinner"></div>
+      <div class="state-h" style="font-size:15px;">Searching &amp; evaluating…</div>
+      <div class="loading-msg" id="lmsg">${LOAD_MSGS[0]}</div>
+    </div>`;
+  const timer = setInterval(() => {
+    mi = (mi + 1) % LOAD_MSGS.length;
+    const el = document.getElementById('lmsg');
+    if (el) el.textContent = LOAD_MSGS[mi];
+  }, 1800);
+
+  const SYSTEM = `You are a senior NRI property advisor — former real estate lawyer, now specialist in Kerala and Tamil Nadu land markets, with 25 years of NRI settlement consultancy. You have deep knowledge of Kerala flood zones, land classification law (Purayidam vs Nilam), FEMA NRI purchase rules, Palakkad Tamil belt culture, Kottayam property market, and traditional/organic construction.
+
+User profile: NRI couple from Chennai (Tamil), based in Qatar 20 years, budget INR 40–60L for land (plan to build laterite/wood traditional home). Friend lives near Athirampuzha, Kottayam. Kids near/entering university. Looking for 20–35 cents elevated, flood-safe Purayidam land in peaceful rural setting but within reach of hospitals, airports, and amenities. Want Tamil cultural accessibility. Investment appreciation is important — do NOT want to buy at a saturated price.
+
+Your task: Find real or market-realistic property listings for the requested area. Evaluate each on 12 dimensions. Be an honest advisor — flag problems clearly. Return ONLY a JSON array.
+
+Each property object:
+{
+  "id": "unique_string",
+  "title": "descriptive title ≤50 chars",
+  "location": "village/town, district, state",
+  "type": "land|house|farmhouse",
+  "price_lakhs": number,
+  "size_cents": number,
+  "price_per_cent": number (in thousands, e.g. 175 means 1.75L/cent),
+  "built_sqft": number or 0,
+  "dist_airport_km": number,
+  "dist_hospital_km": number,
+  "dist_railway_km": number,
+  "dist_bus_km": number,
+  "dist_city_km": number,
+  "dist_friend_km": number (distance from Athirampuzha — put 0 if not applicable),
+  "nearest_airport": "airport name",
+  "nearest_hospital": "hospital name",
+  "nearest_railway": "station name",
+  "land_type": "Purayidam|Nilam|Agricultural|Mixed|Unknown",
+  "rera_status": "Applicable|NA|Unknown",
+  "source": "source site or market data",
+  "source_url": "url or empty string",
+  "invest_grade": "A|B|C|D",
+  "invest_note": "1-sentence investment note",
+  "appreciation_pct": number (estimated 5-year appreciation %),
+  "rental_yield_pct": number or 0,
+  "summary": "2 sentences — honest advisor note, any red flags",
+  "flags": [{"type": "ok|warn|alert", "text": "short flag"}],
+  "dims": {
+    "flood": 1-10,
+    "greenery": 1-10,
+    "connect": 1-10,
+    "hospital": 1-10,
+    "community": 1-10,
+    "peace": 1-10,
+    "legal": 1-10,
+    "invest": 1-10,
+    "water": 1-10,
+    "polstab": 1-10,
+    "disaster": 1-10,
+    "value": 1-10
+  },
+  "overall": 1-10
+}
+
+Scoring rules:
+flood: 10=confirmed elevated Purayidam, 2018-safe, no Meenachil/river adjacency; 5=uncertain; 1=Nilam/riverbank
+greenery: 10=forest/plantation/hills; 6=paddy fields+palms; 3=peri-urban; 1=urban
+connect: 10=<50km int airport, good rail; 7=50-100km; 5=100-150km; 3=>150km
+hospital: 10=<10km major hospital; 8=10-20km; 6=20-40km; 3=>40km
+community: 10=Palakkad Tamil belt; 7=Kottayam mixed/Tamils present; 5=pure Malayalam area
+peace: 10=remote village, no highway; 7=near tar road, quiet; 4=near main road
+legal: 10=clear patta+EC confirmed Purayidam; 7=likely Purayidam but verify; 3=agricultural/conversion needed; 1=Nilam
+invest: 10=under market, high appreciation corridor; 7=fair market, steady appreciation; 4=near saturated; 1=overpriced
+water: 10=well+river+piped all available, no flood risk to water; 5=piped only, moderate; 2=water scarcity
+polstab: Kerala: 7 (coalition but stable); TN: 7 (stable); Goa: 7; Global destinations vary
+disaster: 10=no flood/landslide/cyclone risk; 7=low risk; 4=moderate (some flood); 1=high risk
+value: 10=price well below market, room for negotiation; 7=fair; 4=slightly above; 1=overpriced for location
+
+Return 10–14 properties. Include variety — different villages, price points, types. Be specific with real village names, realistic 2025 prices. First character must be [ last must be ].`;
+
+  const USER = `Find property listings near: ${loc}
+Type: ${ptype} | Budget: ${budget} | Min size: ${minSize} cents | Region filter: ${region} | Land type: ${landtype}
+NRI from Chennai, Qatar-based. Friend at Athirampuzha, Kottayam. Tamil-speaking family. Budget ₹40–60L for land.
+Find 10–14 real or market-realistic listings. Search MagicBricks, 99acres, Housing.com, NoBroker, and Kerala local property sites. Evaluate all 12 dimensions for each. Return JSON array only.`;
+
+  try {
+    const res = await fetch(PROXY, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 8000,
+        tools: [{type:'web_search_20250305',name:'web_search'}],
+        system: SYSTEM,
+        messages: [{role:'user',content:USER}]
+      })
+    });
+
+    clearInterval(timer);
+    if (!res.ok) throw new Error(`API ${res.status}: ${(await res.text()).slice(0,200)}`);
+
+    const data = await res.json();
+    const raw = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    const s = raw.indexOf('['), e = raw.lastIndexOf(']');
+    if (s<0||e<0) throw new Error('No property data in response. Please try again.');
+    let parsed;
+    try { parsed = JSON.parse(raw.slice(s, e+1)); }
+    catch {
+      const c = raw.slice(s,e+1).replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/,\s*}/g,'}').replace(/,\s*]/g,']');
+      parsed = JSON.parse(c);
+    }
+    allResults = parsed;
+    renderResults();
+    renderAdvisor(parsed);
+
+  } catch(err) {
+    clearInterval(timer);
+    document.getElementById('results').innerHTML = `
+      <div class="state-box">
+        <div class="state-icon">⚠️</div>
+        <div class="state-h">Search failed</div>
+        <div class="state-p">${err.message}</div>
+      </div>`;
+  }
+
+  document.getElementById('sbtn').disabled = false;
+}
+
+function renderAdvisor(results) {
+  const el = document.getElementById('advisor');
+  if (!results?.length) return;
+  const weights = getWeights();
+  const sorted = results.map(r => ({...r, _ws: computeWeightedScore(r, weights)})).sort((a,b) => b._ws - a._ws);
+  const top = sorted[0];
+  const avgFlood = (results.reduce((s,r) => s+(r.dims?.flood||5),0)/results.length).toFixed(1);
+  const nilam = results.filter(r => r.land_type === 'Nilam').length;
+  const avgInvest = (results.reduce((s,r) => s+(r.dims?.invest||5),0)/results.length).toFixed(1);
+  const bestConn = results.reduce((best,r) => (!best || (r.dims?.connect||0) > (best.dims?.connect||0)) ? r : best, null);
+
+  el.innerHTML = `
+    <div class="adv-head">
+      <div class="adv-icon">🧭</div>
+      <div class="adv-title">Advisor's read — ${lastLoc}</div>
+    </div>
+    <div class="adv-body">
+      Found <strong>${results.length} properties</strong>. Weighted by your priorities — top pick is <strong>${top.title}</strong> at ₹${top.price_lakhs}L (weighted score <strong>${top._ws}/10</strong>).
+      Area flood-safety average: <strong>${avgFlood}/10</strong> — ${parseFloat(avgFlood)>=7?'generally safe, but verify each plot\'s 2018 flood history individually.':'⚠️ exercise caution — confirm Purayidam classification and elevation before purchase.'} 
+      Investment score average: <strong>${avgInvest}/10</strong>. Best airport connectivity: <strong>${bestConn?.location}</strong> (${bestConn?.dist_airport_km}km to ${bestConn?.nearest_airport}).
+      ${nilam > 0 ? `<span style="color:var(--red)">⚠️ ${nilam} listing${nilam>1?'s':''} flagged as possible Nilam (paddy land) — legally complex to convert, avoid unless you verify with Village Office.</span>` : ''}
+    </div>
+    <div class="adv-pills">
+      <span class="adv-tag green">✅ Verify: Patta · EC (30yr) · 2018 flood survey no. at Village Office</span>
+      <span class="adv-tag amber">⚡ NRIs: Buy via NRE/NRO account only · No agricultural/Nilam land</span>
+      <span class="adv-tag red">🚫 Nilam land: AVOID — paddy land conversion is legally near-impossible</span>
+    </div>`;
+  el.classList.add('show');
+}
+
+function renderResults() {
+  const sorted = getSorted();
+  const total = sorted.length;
+  const totalPages = Math.ceil(total / PER_PAGE);
+  const start = (page-1)*PER_PAGE;
+  const pageItems = sorted.slice(start, start+PER_PAGE);
+
+  document.getElementById('status-row').style.display = 'flex';
+  document.getElementById('status-txt').innerHTML = `Showing <strong>${start+1}–${Math.min(start+PER_PAGE,total)}</strong> of <strong>${total}</strong> properties`;
+
+  if (!pageItems.length) {
+    document.getElementById('results').innerHTML = '<div class="state-box"><div class="state-icon">🔍</div><div class="state-h">No results</div></div>';
+    return;
+  }
+
+  const gIdx = (page-1)*PER_PAGE;
+  const html = viewMode === 'grid'
+    ? `<div class="cards-grid">${pageItems.map((p,i) => buildCard(p, gIdx+i+1, sorted)).join('')}</div>`
+    : `<div>${pageItems.map((p,i) => buildListRow(p, gIdx+i+1, sorted)).join('')}</div>`;
+
+  document.getElementById('results').innerHTML = html;
+  renderPagination(totalPages);
+}
+
+function dimCls(v) { return v>=7?'h':v>=5?'m':'l'; }
+
+function scoreLabel(s) { return s>=7?'high':s>=5?'mid':'low'; }
+
+function priceStr(l) { return l>=100 ? `₹${(l/100).toFixed(2)} Cr` : `₹${l}L`; }
+
+function rankBadge(rank) {
+  if (rank===1) return '<span class="card-rank-badge r1">🥇 #1 pick</span>';
+  if (rank===2) return '<span class="card-rank-badge r2">🥈 #2</span>';
+  if (rank===3) return '<span class="card-rank-badge r3">🥉 #3</span>';
+  return `<span class="card-rank-badge">#${rank}</span>`;
+}
+
+function buildCard(p, rank, sorted) {
+  const ws = p._wscore || p.overall || 5;
+  const sc = scoreLabel(ws);
+  const isCmp = cmpList.some(c=>c.id===p.id);
+  const dims = p.dims || {};
+  const id = p.id;
+
+  const distBadges = [
+    p.dist_airport_km  ? `<span class="dist-badge">✈️ ${p.dist_airport_km}km <span style="color:var(--text2)">${p.nearest_airport||'airport'}</span></span>` : '',
+    p.dist_hospital_km ? `<span class="dist-badge">🏥 ${p.dist_hospital_km}km <span style="color:var(--text2)">${p.nearest_hospital||'hospital'}</span></span>` : '',
+    p.dist_railway_km  ? `<span class="dist-badge">🚉 ${p.dist_railway_km}km <span style="color:var(--text2)">${p.nearest_railway||'railway'}</span></span>` : '',
+    p.dist_bus_km      ? `<span class="dist-badge">🚌 ${p.dist_bus_km}km bus</span>` : '',
+    p.dist_friend_km   ? `<span class="dist-badge">👥 ${p.dist_friend_km}km friend</span>` : '',
+  ].filter(Boolean).join('');
+
+  const flagsHtml = (p.flags||[]).map(f =>
+    `<span class="flag ${f.type}">${f.type==='alert'?'⚠️':f.type==='ok'?'✅':'⚡'} ${f.text}</span>`
+  ).join('');
+
+  const dimsHtml = DIMS.map(d => {
+    const v = dims[d.id] || 0;
+    const cls = dimCls(v);
+    return `<div class="dim-row">
+      <span class="dim-lbl">${d.label}</span>
+      <div class="dim-track"><div class="dim-fill ${cls}" style="width:${v*10}%"></div></div>
+      <span class="dim-val ${cls}">${v}</span>
+    </div>`;
+  }).join('');
+
+  const ltColor = p.land_type==='Purayidam'?'g':p.land_type==='Nilam'?'r':'a';
+
+  return `<div class="pcard ${rank<=3?'top-pick':''}" id="pc-${id}">
+    <div class="card-strip ${sc}"></div>
+    <div class="card-top">
+      ${rankBadge(rank)}
+      <div class="score-ring ${sc}">
+        <span class="score-num ${sc}">${ws}</span>
+        <span class="score-denom">/10</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-title">${p.title}</div>
+      <div class="card-location">📍 ${p.location}</div>
+      <div class="price-row">
+        <span class="price-main">${priceStr(p.price_lakhs)}</span>
+        ${p.size_cents?`<span class="price-unit">${p.size_cents} cents</span>`:''}
+        ${p.price_per_cent?`<span class="price-per">₹${p.price_per_cent}K/cent</span>`:''}
+      </div>
+      <div class="specs-row">
+        <span class="spec ${ltColor}" title="Land classification">${p.land_type||'Unknown type'}</span>
+        ${p.built_sqft?`<span class="spec">${p.built_sqft} sqft built</span>`:''}
+        ${p.invest_grade?`<span class="spec ${p.invest_grade==='A'||p.invest_grade==='B'?'g':p.invest_grade==='D'?'r':'a'}">Grade ${p.invest_grade}</span>`:''}
+        ${p.appreciation_pct?`<span class="spec g">↑ ~${p.appreciation_pct}% /5yr</span>`:''}
+        ${p.source?`<span class="spec" style="color:var(--text2)">${p.source}</span>`:''}
+      </div>
+      <div class="dist-row">${distBadges||'<span class="t0">Distances not available</span>'}</div>
+      <div class="flags-row">${flagsHtml}</div>
+      <div class="dims-grid">${dimsHtml}</div>
+      <div class="invest-row">
+        <div class="invest-head">
+          <span class="invest-lbl">Investment potential — ${p.invest_note||'N/A'}</span>
+          <span class="invest-grade ${p.invest_grade||'C'}">Grade ${p.invest_grade||'?'}</span>
+        </div>
+        <div class="invest-track"><div class="invest-fill" style="width:${(dims.invest||5)*10}%"></div></div>
+      </div>
+      <div class="card-summary">${p.summary||''}</div>
+    </div>
+    <div class="card-footer">
+      ${p.source_url?`<button class="btn-prim" onclick="window.open('${p.source_url}','_blank')">View listing →</button>`:`<button class="btn-prim" onclick="qs('${p.location.split(',')[0].trim()}')">Search this area →</button>`}
+      <button class="btn-sec" onclick="toggleExpand('${id}')">Details</button>
+      <button class="btn-sec ${isCmp?'added':''}" id="cb-${id}" onclick="toggleCmp('${id}')">
+        ${isCmp?'✓ Added':'+ Compare'}
+      </button>
+    </div>
+    <div class="detail-drawer" id="dd-${id}">
+      ${buildDetailDrawer(p)}
+    </div>
+    <button class="expand-btn" id="eb-${id}" onclick="toggleExpand('${id}')">
+      <span>▼</span> <span id="et-${id}">Show full details</span>
+    </button>
+  </div>`;
+}
+
+function buildDetailDrawer(p) {
+  const legalItems = [
+    p.land_type === 'Purayidam' ? {ok:true,text:'Purayidam classification — buildable residential land. NRI can purchase directly.'} :
+    p.land_type === 'Nilam' ? {ok:false,text:'Nilam (paddy land) — AVOID. Cannot be converted easily under Kerala law.'} :
+    {ok:null,text:'Verify land classification with Village Office before purchase.'},
+    {ok:null,text:'Get Encumbrance Certificate (EC) for last 30 years — confirms no liens or disputes.'},
+    {ok:null,text:'Purchase only via NRE/NRO bank account. No cash transactions.'},
+    {ok:null,text:'Appoint Kerala-registered advocate for title search. Budget ₹30–50K.'},
+    {ok:null,text:'Check 2018 flood survey number status at local Village Office — mandatory.'},
+    {ok:null,text:'If building: obtain Grama Panchayat permit before any construction.'},
+  ];
+  const legalHtml = legalItems.map(li => `<div class="legal-item"><span class="legal-dot">${li.ok===true?'✅':li.ok===false?'🚫':'📌'}</span><span>${li.text}</span></div>`).join('');
+
+  return `
+    <div class="detail-section">
+      <div class="detail-label">Distances &amp; connectivity</div>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="di-label">✈️ Airport</div><div class="di-val ${(p.dist_airport_km||999)<80?'g':(p.dist_airport_km||999)<150?'a':'r'}">${p.dist_airport_km||'?'} km — ${p.nearest_airport||'?'}</div></div>
+        <div class="detail-item"><div class="di-label">🏥 Hospital</div><div class="di-val ${(p.dist_hospital_km||999)<20?'g':(p.dist_hospital_km||999)<40?'a':'r'}">${p.dist_hospital_km||'?'} km — ${p.nearest_hospital||'?'}</div></div>
+        <div class="detail-item"><div class="di-label">🚉 Railway</div><div class="di-val">${p.dist_railway_km||'?'} km — ${p.nearest_railway||'?'}</div></div>
+        <div class="detail-item"><div class="di-label">🚌 Bus stop</div><div class="di-val">${p.dist_bus_km||'?'} km</div></div>
+        <div class="detail-item"><div class="di-label">🏙️ Nearest city</div><div class="di-val">${p.dist_city_km||'?'} km</div></div>
+        <div class="detail-item"><div class="di-label">👥 Friend (Athirampuzha)</div><div class="di-val ${(p.dist_friend_km||999)<15?'g':(p.dist_friend_km||999)<30?'a':'r'}">${p.dist_friend_km||'?'} km</div></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-label">Investment &amp; value analysis</div>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="di-label">Investment grade</div><div class="di-val ${p.invest_grade==='A'||p.invest_grade==='B'?'g':p.invest_grade==='D'?'r':'a'}">Grade ${p.invest_grade||'?'}</div></div>
+        <div class="detail-item"><div class="di-label">Est. 5-yr appreciation</div><div class="di-val g">~${p.appreciation_pct||'?'}%</div></div>
+        <div class="detail-item"><div class="di-label">Rental yield</div><div class="di-val">${p.rental_yield_pct||0}% p.a.</div></div>
+        <div class="detail-item"><div class="di-label">Price per cent</div><div class="di-val">₹${p.price_per_cent||'?'}K</div></div>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--text1);background:var(--bg1);border-radius:var(--r8);padding:8px 10px;">${p.invest_note||'No investment note available.'}</div>
+    </div>
+    <div class="detail-section">
+      <div class="legal-panel">
+        <div class="legal-title">⚖️ Legal &amp; NRI compliance checklist</div>
+        <div class="legal-items">${legalHtml}</div>
+      </div>
+    </div>`;
+}
+
+function buildListRow(p, rank) {
+  const ws = p._wscore || p.overall || 5;
+  const sc = scoreLabel(ws);
+  return `<div style="background:var(--bg1);border:1px solid var(--border);border-radius:var(--r12);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div class="score-ring ${sc}" style="flex-shrink:0;"><span class="score-num ${sc}">${ws}</span><span class="score-denom">/10</span></div>
+    <div style="flex:1;min-width:200px;">
+      <div class="t3">${p.title}</div>
+      <div style="font-size:11px;color:var(--teal);">📍 ${p.location}</div>
+    </div>
+    <div style="font-size:18px;font-weight:800;color:var(--green);white-space:nowrap;">${priceStr(p.price_lakhs)}</div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;">
+      ${p.dist_airport_km?`<span class="dist-badge">✈️${p.dist_airport_km}km</span>`:''}
+      ${p.dist_hospital_km?`<span class="dist-badge">🏥${p.dist_hospital_km}km</span>`:''}
+      ${p.invest_grade?`<span class="spec ${p.invest_grade==='A'||p.invest_grade==='B'?'g':'a'}">Gr.${p.invest_grade}</span>`:''}
+    </div>
+    <button class="btn-prim" style="font-size:11px;padding:6px 10px;" onclick="${p.source_url?`window.open('${p.source_url}','_blank')`:`qs('${p.location.split(',')[0].trim()}')`}">View →</button>
+  </div>`;
+}
+
+function toggleExpand(id) {
+  const dd = document.getElementById('dd-'+id);
+  const et = document.getElementById('et-'+id);
+  const eb = document.getElementById('eb-'+id);
+  const isOpen = dd.classList.contains('show');
+  dd.classList.toggle('show');
+  if (et) et.textContent = isOpen ? 'Show full details' : 'Hide details';
+}
+
+function setView(v, btn) {
+  viewMode = v;
+  document.querySelectorAll('#vgrid,#vlist').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  if (allResults.length) renderResults();
+}
+
+function renderPagination(totalPages) {
+  const pg = document.getElementById('pagination');
+  if (totalPages <= 1) { pg.style.display = 'none'; return; }
+  pg.style.display = 'flex';
+  let h = `<button class="pg-btn" onclick="goPage(${page-1})" ${page===1?'disabled':''}>‹</button>`;
+  for (let i=1; i<=totalPages; i++) {
+    if (i===1||i===totalPages||Math.abs(i-page)<=1)
+      h += `<button class="pg-btn ${i===page?'on':''}" onclick="goPage(${i})">${i}</button>`;
+    else if (Math.abs(i-page)===2)
+      h += `<span class="pg-info">…</span>`;
+  }
+  h += `<button class="pg-btn" onclick="goPage(${page+1})" ${page===totalPages?'disabled':''}>›</button>`;
+  h += `<span class="pg-info">Page ${page} of ${totalPages}</span>`;
+  pg.innerHTML = h;
+}
+
+function goPage(n) {
+  const tot = Math.ceil(allResults.length/PER_PAGE);
+  if (n<1||n>tot) return;
+  page = n;
+  renderResults();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function toggleCmp(id) {
+  const p = allResults.find(x => x.id===id);
+  if (!p) return;
+  const idx = cmpList.findIndex(c=>c.id===id);
+  if (idx>-1) cmpList.splice(idx,1);
+  else { if(cmpList.length>=4){alert('Max 4 at once');return;} cmpList.push(p); }
+  updateCmpBar();
+  const btn = document.getElementById('cb-'+id);
+  if (btn) { btn.textContent = cmpList.some(c=>c.id===id)?'✓ Added':'+ Compare'; btn.className = 'btn-sec'+(cmpList.some(c=>c.id===id)?' added':''); }
+}
+
+function updateCmpBar() {
+  const bar = document.getElementById('cmp-bar');
+  if (!cmpList.length) { bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  document.getElementById('cmp-chips').innerHTML = cmpList.map(p =>
+    `<div class="cmp-chip">${p.title.substring(0,22)}… <span class="cmp-x" onclick="toggleCmp('${p.id}')">✕</span></div>`
+  ).join('');
+}
+
+function clearCmp() { cmpList=[]; updateCmpBar(); }
+
+function openCompare() {
+  if (cmpList.length<2){alert('Select at least 2 properties');return;}
+  const mc = document.getElementById('modal-content');
+
+  const headers = `<th style="min-width:100px;">Dimension</th>${cmpList.map(p=>`<th>${p.title}<br><span style="font-size:10px;color:var(--text2);">${p.location}</span></th>`).join('')}`;
+
+  const dimRows = DIMS.map(d => {
+    const vals = cmpList.map(p => p.dims?.[d.id]||0);
+    const max = Math.max(...vals);
+    const cells = cmpList.map((p,i) => {
+      const v = vals[i]; const best = v===max?' cmp-best':'';
+      return `<td class="${best}">${v}/10</td>`;
+    }).join('');
+    return `<tr><td style="font-weight:600;color:var(--text2);font-size:11px;">${d.label}</td>${cells}</tr>`;
+  }).join('');
+
+  const metaRows = [
+    ['Price', cmpList.map(p => ({v:p.price_lakhs, str:priceStr(p.price_lakhs)})), 'asc'],
+    ['Size', cmpList.map(p => ({v:p.size_cents||0, str:`${p.size_cents||'?'} cents`})), 'desc'],
+    ['✈️ Airport', cmpList.map(p => ({v:p.dist_airport_km||999, str:`${p.dist_airport_km||'?'}km`})), 'asc'],
+    ['🏥 Hospital', cmpList.map(p => ({v:p.dist_hospital_km||999, str:`${p.dist_hospital_km||'?'}km`})), 'asc'],
+    ['🚉 Railway', cmpList.map(p => ({v:p.dist_railway_km||999, str:`${p.dist_railway_km||'?'}km`})), 'asc'],
+    ['Land type', cmpList.map(p => ({v:0, str:p.land_type||'?'})), null],
+    ['Invest grade', cmpList.map(p => ({v:{'A':4,'B':3,'C':2,'D':1}[p.invest_grade]||0, str:`Grade ${p.invest_grade||'?'}`})), 'desc'],
+    ['5yr appreciation', cmpList.map(p => ({v:p.appreciation_pct||0, str:`~${p.appreciation_pct||'?'}%`})), 'desc'],
+  ].map(([lbl, items, dir]) => {
+    const vals = items.map(i => i.v);
+    const best = dir==='asc'?Math.min(...vals):Math.max(...vals);
+    const cells = items.map(it => `<td class="${dir&&it.v===best?' cmp-best':''}">${it.str}</td>`).join('');
+    return `<tr><td style="font-weight:600;color:var(--text2);font-size:11px;">${lbl}</td>${cells}</tr>`;
+  }).join('');
+
+  const wscores = cmpList.map(p => p._wscore||p.overall||5);
+  const maxWS = Math.max(...wscores);
+  const wsRow = `<tr><td style="font-weight:700;color:var(--text0);font-size:12px;">Weighted score</td>${cmpList.map((p,i)=>`<td class="${wscores[i]===maxWS?' cmp-best':''}" style="font-size:16px;font-weight:800;">${wscores[i]}</td>`).join('')}</tr>`;
+
+  mc.innerHTML = `<div style="overflow-x:auto;"><table class="cmp-table"><thead><tr>${headers}</tr></thead><tbody>${wsRow}${metaRows}${dimRows}</tbody></table></div>`;
+  document.getElementById('modal-bg').classList.add('show');
+}
+
+function closeModal() { document.getElementById('modal-bg').classList.remove('show'); }
+document.getElementById('modal-bg').addEventListener('click', e => { if(e.target===document.getElementById('modal-bg'))closeModal(); });
+document.getElementById('loc').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
+</script>
+</body>
+</html>
